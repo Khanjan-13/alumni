@@ -20,6 +20,14 @@ const Format = () => {
 };
 const router = createBrowserRouter([
   {
+    path: "/signup",
+    element: <Signup />,
+  },
+  {
+    path:"/register",
+    element:<Login />,
+  },
+  {
     path: "/",
     element: <Format />,
     children: [
@@ -61,14 +69,7 @@ const router = createBrowserRouter([
     path: "/login",
     element: <Login />,
   },
-  {
-    path: "/signup",
-    element: <Signup />,
-  },
-  {
-    path:"/register",
-    element:<Login />,
-  }
+  
 ]);
 function LinkPage() {
   return (
