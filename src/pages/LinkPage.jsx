@@ -64,6 +64,10 @@ const router = createBrowserRouter([
     path: "/signup",
     element: <Signup />,
   },
+  {
+    path:"/register",
+    element:<Signup />,
+  }
 ]);
 function LinkPage() {
   return (
