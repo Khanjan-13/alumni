@@ -7,6 +7,8 @@ import Signup from "./Signup";
 import ProtectedRoutes from "../ProtectedRoutes";
 import Event from "./Event";
 import Profile from "./ProfileManage/Profile";
+import Feed from "./Feed/Feed";
+import FeedPost from "./Feed/FeedPost";
 const Format = () => {
   return (
     <div>
@@ -23,6 +25,26 @@ const router = createBrowserRouter([
       {
         path: "/",
         element: <Home />,
+      },
+      {
+        path: "/events",
+        element: <Event />,
+      },
+      {
+        path: "/feed",
+        element: (
+          <ProtectedRoutes>
+            <Feed />
+          </ProtectedRoutes>
+        ),
+      },
+      {
+        path: "/feed-post",
+        element: (
+          <ProtectedRoutes>
+            <FeedPost />
+          </ProtectedRoutes>
+        ),
       },
       {
         path: "/settings",

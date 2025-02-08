@@ -16,13 +16,24 @@ function Signup() {
     password: "",
     confirmPassword: "",
     userType: "",
-    isStudentEmail: false, // New state to track student email
+    isStudentEmail: false,
+    isFacultyEmail: false,
   });
 
-  // Function to check if email format matches "NNAA###@bvmengineering.ac.in"
+  // Function to check email format
   const checkEmailFormat = (email) => {
-    const match = email.match(/^(\d{2}[a-zA-Z]{2}\d{3})@bvmengineering\.ac\.in$/);
-    return match ? "student" : "";
+    const studentMatch = email.match(
+      /^(\d{2}[a-zA-Z]{2}\d{3})@bvmengineering\.ac\.in$/
+    );
+    const facultyMatch = email.match(
+      /^([a-zA-Z]+\.[a-zA-Z]+)@bvmengineering\.ac\.in$/
+    );
+
+    if (studentMatch)
+      return { userType: "student", isStudent: true, isFaculty: false };
+    if (facultyMatch)
+      return { userType: "faculty", isStudent: false, isFaculty: true };
+    return { userType: "", isStudent: false, isFaculty: false };
   };
 
   // Handle input changes
@@ -30,21 +41,22 @@ function Signup() {
     const { name, value } = e.target;
 
     if (name === "email") {
-      const userType = checkEmailFormat(value);
+      const { userType, isStudent, isFaculty } = checkEmailFormat(value);
       setFormData({
         ...formData,
         email: value,
-        userType: userType || "",
-        isStudentEmail: !!userType, // True if email is a student email
+        userType,
+        isStudentEmail: isStudent,
+        isFacultyEmail: isFaculty,
       });
     } else {
       setFormData({ ...formData, [name]: value });
     }
   };
 
-  // Handle role selection manually (only if NOT a student email)
+  // Handle role change manually (only if NOT student or faculty email)
   const handleRoleChange = (value) => {
-    if (!formData.isStudentEmail) {
+    if (!formData.isStudentEmail && !formData.isFacultyEmail) {
       setFormData({ ...formData, userType: value });
     }
   };
@@ -70,13 +82,20 @@ function Signup() {
 
       if (response.data.success) {
         toast.success("Registration successful!");
-        setFormData({ email: "", password: "", confirmPassword: "", userType: "", isStudentEmail: false });
+        setFormData({
+          email: "",
+          password: "",
+          confirmPassword: "",
+          userType: "",
+          isStudentEmail: false,
+        });
       } else {
         toast.error(response.data.message || "Failed to register.");
       }
     } catch (error) {
       toast.error(
-        error.response?.data?.message || "Something went wrong. Please try again."
+        error.response?.data?.message ||
+          "Something went wrong. Please try again."
       );
     }
   };
@@ -90,7 +109,10 @@ function Signup() {
         </h2>
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="email"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
               Email Address
             </label>
             <Input
@@ -104,18 +126,22 @@ function Signup() {
             />
           </div>
           <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
-            <Select 
-              onValueChange={handleRoleChange} 
-              value={formData.userType} 
-              disabled={formData.isStudentEmail} // Disable selection if student email
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Role
+            </label>
+            <Select
+              onValueChange={handleRoleChange}
+              value={formData.userType}
+              disabled={formData.isStudentEmail || formData.isFacultyEmail} // Disable if student or faculty
             >
               <SelectTrigger>
                 <SelectValue placeholder={formData.userType || "Select Role"} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="alumni">Alumni</SelectItem>
-                <SelectItem value="faculty">Faculty</SelectItem>
+                <SelectItem value="faculty" disabled={formData.isFacultyEmail}>
+                  Faculty {formData.isFacultyEmail ? "(Auto-Selected)" : ""}
+                </SelectItem>
                 <SelectItem value="alumni-faculty">Alumni/Faculty</SelectItem>
                 <SelectItem value="student" disabled={formData.isStudentEmail}>
                   Student {formData.isStudentEmail ? "(Auto-Selected)" : ""}
@@ -124,7 +150,10 @@ function Signup() {
             </Select>
           </div>
           <div className="mb-4">
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="password"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
               Password
             </label>
             <Input
@@ -138,7 +167,10 @@ function Signup() {
             />
           </div>
           <div className="mb-6">
-            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="confirmPassword"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
               Confirm Password
             </label>
             <Input
@@ -160,7 +192,10 @@ function Signup() {
         </form>
         <p className="mt-6 text-center text-sm text-gray-600">
           Already have an account?{" "}
-          <a href="/login" className="text-blue-600 hover:underline hover:text-blue-700">
+          <a
+            href="/login"
+            className="text-blue-600 hover:underline hover:text-blue-700"
+          >
             Log In
           </a>
         </p>

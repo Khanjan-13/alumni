@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "../../ui/button";
 import { useNavigate } from "react-router-dom";
 import { NavLink } from "react-router-dom";
@@ -20,17 +20,55 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import axios from "axios";
+import { toast } from "react-hot-toast";
 
 function Navbar() {
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
   const userId = localStorage.getItem("user_id");
+  const [userName, setUserName] = useState("");
 
+  // Logout function
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user_id");
     navigate("/login");
   };
+
+  // Fetch user profile data
+  useEffect(() => {
+    const fetchProfileData = async () => {
+      try {
+        if (!token) {
+          toast.error("Authentication token is missing. Please log in again.");
+          return;
+        }
+        if (!userId) {
+          toast.error("User ID is missing. Please log in again.");
+          return;
+        }
+
+        const response = await axios.get(
+          `https://alumni-backend-drab.vercel.app/api/users/profile/${userId}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+
+        if (response.status === 200) {
+          setUserName(response.data.data.profileData?.name || "User");
+        } else {
+          toast.error("Failed to load profile data.");
+        }
+      } catch (error) {
+        console.error("Error fetching profile data:", error);
+        toast.error(error.response?.data?.message || "Error loading profile data.");
+      }
+    };
+
+    fetchProfileData();
+  }, [token, userId]); // Runs only when token or userId changes
 
   return (
     <div>
@@ -39,23 +77,23 @@ function Navbar() {
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-2">
               <GraduationCap size={32} />
-              <span className="text-2xl font-bold">BVM Alumni Association</span>
+              <NavLink to="/" className="text-2xl font-bold">BVM Alumni Association</NavLink>
             </div>
             <nav>
               <ul className="flex space-x-4 justify-center items-center">
                 {token && userId ? (
                   <>
                     <li>
-                      <NavLink
+                      <span
                         to="#"
-                        className="hover:underline flex items-center gap-2 font-semibold"
+                        className=" flex items-center gap-2 font-semibold"
                       >
                         <Avatar>
                           <AvatarImage src="https://github.com/shadcn.png" />
                           <AvatarFallback>CN</AvatarFallback>
                         </Avatar>
-                        <span className="hidden md:flex">Hello! Khanjan</span>
-                      </NavLink>
+                        <span className="hidden md:flex">Hello! {userName}</span>
+                      </span>
                     </li>
                     <li>
                       <DropdownMenu>
@@ -65,7 +103,7 @@ function Navbar() {
                         <DropdownMenuContent className="uppercase text-blue-600 w-52 font-medium mr-4">
                           <DropdownMenuItem className="p-3">Profile</DropdownMenuItem>
                           <NavLink to="/settings">
-                            <DropdownMenuItem className="p-3">Settings</DropdownMenuItem>
+                            <DropdownMenuItem className="p-3">Manage Profile</DropdownMenuItem>
                           </NavLink>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem className="p-3" onClick={handleLogout}>
@@ -97,7 +135,7 @@ function Navbar() {
           <ul className="flex justify-center items-center gap-3">
             <li>
               <NavLink
-                to="#"
+                to="/feed"
                 className="flex items-center space-x-2 p-3 hover:bg-blue-800 transition-colors font-medium uppercase"
               >
                 <Rss size={20} />
@@ -127,7 +165,7 @@ function Navbar() {
             <li>|</li>
             <li>
               <NavLink
-                to="#"
+                to="/events"
                 className="flex items-center space-x-2 p-3 hover:bg-blue-800 transition-colors font-medium uppercase"
               >
                 <CalendarFold size={20} />

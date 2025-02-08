@@ -59,7 +59,7 @@ function Login() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       {/* React Hot Toast Container */}
-      <Toaster position="top-right" reverseOrder={false} />
+      <Toaster position="top-center" reverseOrder={false} />
 
       <div className="bg-white shadow-lg rounded-lg w-full max-w-md p-8">
         <h2 className="text-2xl font-semibold text-gray-800 text-center mb-6">

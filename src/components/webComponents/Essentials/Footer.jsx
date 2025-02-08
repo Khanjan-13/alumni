@@ -10,8 +10,8 @@ function Footer() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div>
                   <h3 className="text-lg font-semibold mb-2">Contact Us</h3>
-                  <p>Email: alumni@university.edu</p>
-                  <p>Phone: (123) 456-7890</p>
+                  <p>Email: alumni@bvmengineering.ac.in</p>
+                  <p>Phone: +91 99999 00000</p>
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold mb-2">Follow Us</h3>
