@@ -9,6 +9,7 @@ import Event from "./Event";
 import Profile from "./ProfileManage/Profile";
 import Feed from "./Feed/Feed";
 import FeedPost from "./Feed/FeedPost";
+import Register from "./Register";
 const Format = () => {
   return (
     <div>
@@ -66,7 +67,7 @@ const router = createBrowserRouter([
   },
   {
     path:"/register",
-    element:<Signup />,
+    element:<Register />,
   }
 ]);
 function LinkPage() {
