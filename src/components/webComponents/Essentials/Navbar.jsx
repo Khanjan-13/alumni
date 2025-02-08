@@ -11,6 +11,7 @@ import {
   Rss,
   EllipsisVertical,
   Menu,
+  X,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -28,6 +29,7 @@ function Navbar() {
   const token = localStorage.getItem("token");
   const userId = localStorage.getItem("user_id");
   const [userName, setUserName] = useState("");
+  const [menuOpen, setMenuOpen] = useState(false); // Track mobile menu state
 
   // Logout function
   const handleLogout = () => {
@@ -77,17 +79,16 @@ function Navbar() {
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-2">
               <GraduationCap size={32} />
-              <NavLink to="/" className="text-2xl font-bold">BVM Alumni Association</NavLink>
+              <NavLink to="/" className="text-2xl font-bold">
+                BVM Alumni Association
+              </NavLink>
             </div>
             <nav>
               <ul className="flex space-x-4 justify-center items-center">
                 {token && userId ? (
                   <>
                     <li>
-                      <span
-                        to="#"
-                        className=" flex items-center gap-2 font-semibold"
-                      >
+                      <span className="flex items-center gap-2 font-semibold">
                         <Avatar>
                           <AvatarImage src="https://github.com/shadcn.png" />
                           <AvatarFallback>CN</AvatarFallback>
@@ -115,13 +116,19 @@ function Navbar() {
                   </>
                 ) : (
                   <li>
-                    <Button onClick={() => navigate("/login")} className="text-white bg-blue-600 hover:bg-blue-800 rounded-none">
+                    <Button
+                      onClick={() => navigate("/login")}
+                      className="text-white bg-blue-600 hover:bg-blue-800 rounded-none"
+                    >
                       Login
                     </Button>
                   </li>
                 )}
-                <button className="block md:hidden">
-                  <Menu size={20} />
+                <button
+                  className="block md:hidden"
+                  onClick={() => setMenuOpen(!menuOpen)}
+                >
+                  {menuOpen ? <X size={20} /> : <Menu size={20} />}
                 </button>
               </ul>
             </nav>
@@ -130,9 +137,13 @@ function Navbar() {
       </header>
 
       {/* Secondary Navbar */}
-      <nav className="bg-blue-600 text-white shadow-md fixed w-full mt-16 z-40 hidden md:flex">
+      <nav
+        className={`bg-blue-600 text-white shadow-md fixed w-full  z-40 ${
+          menuOpen ? "block mt-16" : "hidden"
+        } md:flex pt-10 md:pt-0`}
+      >
         <div className="container mx-auto px-4">
-          <ul className="flex justify-center items-center gap-3">
+          <ul className="flex flex-col md:flex-row justify-center items-center gap-3">
             <li>
               <NavLink
                 to="/feed"
@@ -142,7 +153,7 @@ function Navbar() {
                 <span>FEED</span>
               </NavLink>
             </li>
-            <li>|</li>
+            <li className="hidden md:block">|</li>
             <li>
               <NavLink
                 to="#"
@@ -162,7 +173,7 @@ function Navbar() {
                 </span>
               </NavLink>
             </li>
-            <li>|</li>
+            <li className="hidden md:block">|</li>
             <li>
               <NavLink
                 to="/events"
@@ -172,7 +183,7 @@ function Navbar() {
                 <span>Events</span>
               </NavLink>
             </li>
-            <li>|</li>
+            <li className="hidden md:block">|</li>
             <li>
               <NavLink
                 to="#"
@@ -182,7 +193,7 @@ function Navbar() {
                 <span>Jobs & Opportunities</span>
               </NavLink>
             </li>
-            <li>|</li>
+            <li className="hidden md:block">|</li>
             <li>
               <NavLink
                 to="#"
