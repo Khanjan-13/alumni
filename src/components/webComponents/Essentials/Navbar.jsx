@@ -138,8 +138,8 @@ function Navbar() {
 
       {/* Secondary Navbar */}
       <nav
-        className={`bg-blue-600 text-white shadow-md fixed w-full  z-40 ${
-          menuOpen ? "block mt-16" : "hidden"
+        className={`bg-blue-600 text-white shadow-md mt-16 fixed w-full  z-40 ${
+          menuOpen ? "block " : "hidden"
         } md:flex pt-10 md:pt-0`}
       >
         <div className="container mx-auto px-4">
