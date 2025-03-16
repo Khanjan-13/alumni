@@ -10,6 +10,10 @@ import Profile from "./ProfileManage/Profile";
 import Feed from "./Feed/Feed";
 import FeedPost from "./Feed/FeedPost";
 import Register from "./Register";
+import Dashboard from "./Admin/Dashboard";
+import AdminEvent from "./Admin/AdminEvent";
+import AdminAlumni from "./Admin/AdminAlumni";
+import EventDetail from "./Events/EventDetail";
 const Format = () => {
   return (
     <div>
@@ -28,6 +32,18 @@ const router = createBrowserRouter([
     element:<Login />,
   },
   {
+    path:"/admin/home",
+    element:<Dashboard />
+  }, 
+  {
+    path:"/admin/events",
+    element:<AdminEvent />
+  },
+  {
+    path:"/admin/alumni",
+    element:<AdminAlumni />
+  },
+  {
     path: "/",
     element: <Format />,
     children: [
@@ -38,6 +54,10 @@ const router = createBrowserRouter([
       {
         path: "/events",
         element: <Event />,
+      },
+      {
+        path: "/events/:slug/:id",
+        element: <EventDetail />,
       },
       {
         path: "/feed",

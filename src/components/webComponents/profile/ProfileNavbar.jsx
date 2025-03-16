@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import PersonalInfo from "@/components/webComponents/profile/ProfileDetails";
 import ProfileSkill from "./ProfileSkill";
 import ProfileWork from "./ProfileWork";
+import ProfileEducation from "./ProfileEducation";
 function ProfileNavbar() {
   const [activeSection, setActiveSection] = useState("Profile Details");
 
@@ -39,7 +40,7 @@ function ProfileNavbar() {
         {activeSection === "Profile Photo" && <ProfilePhoto />}
         {activeSection === "Profile Details" && <PersonalInfo />}
         {activeSection === "Work Experience" && <ProfileWork />}
-        {activeSection === "Education" && <Education />}
+        {activeSection === "Education" && <ProfileEducation />}
         {activeSection === "Skills" && <ProfileSkill />}
       </div>
     </>

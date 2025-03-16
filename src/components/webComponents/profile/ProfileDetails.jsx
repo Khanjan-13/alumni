@@ -36,14 +36,37 @@ export default function Profile() {
     contact_number: "",
     alternate_contact_number: "",
     bio: "",
+    profile_image: null, // Store file object
   });
+  const [previewUrl, setPreviewUrl] = useState(null); // Store image preview
+  // Cleanup function to revoke object URL when the component unmounts
+  useEffect(() => {
+    return () => {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
+
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setFormData((prev) => ({
+        ...prev,
+        profile_image: file, // Store the file
+      }));
+  
+      // Create preview URL
+      const imageUrl = URL.createObjectURL(file);
+      setPreviewUrl(imageUrl);
+    }
+  };
+  
 
   const token = localStorage.getItem("token");
   const userId = localStorage.getItem("user_id");
 
   useEffect(() => {
-   
-
     const fetchProfileData = async () => {
       try {
         if (!token) {
@@ -90,63 +113,80 @@ export default function Profile() {
 
   const submitForm = async (e) => {
     e.preventDefault();
-
+  
     try {
-      if (!token) {
-        toast.error("Authentication token is missing. Please log in again.");
+      if (!token || !userId) {
+        toast.error("Authentication token or User ID is missing.");
         return;
       }
-      if (!userId) {
-        toast.error("User ID is missing. Please log in again.");
-        return;
+  
+      const formDataToSend = new FormData();
+      formDataToSend.append("user_id", userId);
+      formDataToSend.append("name", formData.name);
+      formDataToSend.append("gender", formData.gender);
+      formDataToSend.append("marital_status", formData.marital_status);
+      formDataToSend.append("dob", formData.dob);
+      formDataToSend.append("taluka", formData.taluka);
+      formDataToSend.append("district", formData.district);
+      formDataToSend.append("postal_code", formData.postal_code);
+      formDataToSend.append("state", formData.state);
+      formDataToSend.append("country", formData.country);
+      formDataToSend.append("alternate_email", formData.alternate_email);
+      formDataToSend.append("institution_name", formData.institution_name);
+      formDataToSend.append("degree", formData.degree);
+      formDataToSend.append("admission_year", formData.admission_year);
+      formDataToSend.append("graduation_year", formData.graduation_year);
+      formDataToSend.append("branch", formData.branch);
+      formDataToSend.append("current_address", formData.current_address);
+      formDataToSend.append("office_address", formData.office_address);
+      formDataToSend.append("contact_number", formData.contact_number);
+      formDataToSend.append("alternate_contact_number", formData.alternate_contact_number);
+      formDataToSend.append("bio", formData.bio);
+  
+      // Append profile image only if a new one is selected
+      if (formData.profile_image) {
+        formDataToSend.append("profile_image", formData.profile_image); // Ensure this matches backend expectations
       }
-
-      const payload = {
-        user_id: userId,
-        name: formData.name || "",
-        gender: formData.gender || "",
-        marital_status: formData.marital_status || "",
-        dob: formData.dob || "",
-        taluka: formData.taluka || "",
-        district: formData.district || "",
-        postal_code: formData.postal_code || "",
-        state: formData.state || "",
-        country: formData.country || "",
-        alternate_email: formData.alternate_email || "",
-        institution_name: formData.institution_name || "Birla Vishvakarma Mahavidyalaya",
-        degree: formData.degree || "",
-        admission_year: formData.admission_year || "",
-        graduation_year: formData.graduation_year || "",
-        branch: formData.branch || "",
-        current_address: formData.current_address || "",
-        office_address: formData.office_address || "",
-        contact_number: formData.contact_number || "",
-        alternate_contact_number: formData.alternate_contact_number || "",
-        bio: formData.bio || "",
-      };
+  
+      let response;
       
-
-      const response = await axios.post(
-        `https://alumni-backend-drab.vercel.app/api/users/profile`,
-        payload,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+      // Check if the profile exists
+      const profileCheck = await axios.get(
+        `https://alumni-backend-drab.vercel.app/api/users/profile/${userId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
       );
-      console.log(response);
-      if (response.status === 200) {
-        toast.success("Profile updated successfully!");
+  
+      if (profileCheck.data?.success && profileCheck.data?.data) {
+        // Profile exists -> Update profile
+        response = await axios.put(
+          `https://alumni-backend-drab.vercel.app/api/users/profile/${userId}`,
+          formDataToSend,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
       } else {
-        toast.error(response.data?.message || "Failed to update profile.");
+        // Profile does not exist -> Create profile
+        response = await axios.post(
+          "https://alumni-backend-drab.vercel.app/api/users/profile",
+          formDataToSend,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
       }
-    }  catch (error) {
-      console.error("Error updating profile:", error.response?.data || error);
-      toast.error(error.response?.data?.message || "Failed to update profile.");
+  
+      if (response.status === 200 || response.status === 201) {
+        toast.success(profileCheck.data?.data ? "Profile updated!" : "Profile created!");
+      } else {
+        toast.error("Profile update failed.");
+      }
+    } catch (error) {
+      console.error("Profile update error:", error);
+      toast.error(error.response?.data?.message || "An error occurred while updating profile.");
     }
-    
   };
+  
 
   return (
     <div className="mx-auto">
@@ -156,6 +196,27 @@ export default function Profile() {
         </CardHeader>
         <CardContent>
           <form onSubmit={submitForm}>
+            <div className="mb-4">
+              <label className="block text-gray-700">Profile Picture</label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="w-full p-2 border rounded-lg"
+              />
+            </div>
+
+            {/* Show Image Preview if Selected */}
+            {previewUrl && (
+              <div className="mb-4">
+                <img
+                  src={previewUrl}
+                  alt="Profile"
+                  className="w-32 h-32 rounded-full object-cover"
+                />
+              </div>
+            )}
+
             <div className="mb-4">
               <label className="block text-gray-700">Full Name</label>
               <Input
@@ -279,7 +340,7 @@ export default function Profile() {
                 required
               />
             </div>
-            
+
             <div className="mb-4">
               <label className="block text-gray-700">Alternate Email</label>
               <Input
@@ -291,7 +352,6 @@ export default function Profile() {
               />
             </div>
 
-            
             <div className="mb-4">
               <label className="block text-gray-700">Institution Name</label>
               <Input
@@ -375,7 +435,6 @@ export default function Profile() {
               />
             </div>
 
-
             <div className="mb-4">
               <label className="block text-gray-700">Contact Number</label>
               <Input
@@ -401,7 +460,6 @@ export default function Profile() {
               />
             </div>
 
-
             {/* <div className="mb-4">
         <label className="block text-gray-700">City</label>
         <Input
@@ -412,8 +470,6 @@ export default function Profile() {
           className="w-full p-2 border rounded-lg"
         />
       </div> */}
-
-          
 
             <div className="mb-4">
               <label className="block text-gray-700">Bio</label>

@@ -1,123 +1,147 @@
-import React from 'react'
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Search, MapPin, Calendar } from "lucide-react"
-
-
-const events = [
-  {
-    id: 1,
-    title: "BVM Class 1981 - Alumni Retreat, 2025",
-    image: "https://almashines.s3.dualstack.ap-southeast-1.amazonaws.com/assets/images/eventlogos/sizea/7462251734947991.jpg",
-    startDate: "Jan 06, 2025",
-    endDate: "Jan 08, 2025",
-    location: "Polo forest",
-    isPast: true,
-  },
-  {
-    id: 2,
-    title: "62nd Annual General Meeting",
-    image: "https://almashines.s3.dualstack.ap-southeast-1.amazonaws.com/assets/images/eventlogos/sizea/7462251731727423.jpg",
-    startDate: "Jan 04, 2025",
-    time: "3:00 PM",
-    location: "V&C Patel English Medium School, Vallabh Vidyanagar",
-    isPast: true,
-  },
-];
-
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Search, MapPin, Calendar } from "lucide-react";
+import { Link } from "react-router-dom";
 
 function Event() {
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const token = localStorage.getItem("token");
+  const user_id = localStorage.getItem("user_id");
+
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        const response = await axios.get(
+          "https://alumni-backend-drab.vercel.app/api/users/events/all",
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        setEvents(response.data.data); // Assuming API response contains { data: [...] }
+      } catch (error) {
+        console.error("Error fetching events:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchEvents();
+  }, [token]);
+
+  // Filter events based on search query
+  const filteredEvents = events.filter((event) =>
+    event.title.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
-    <div className="min-h-screen bg-gray-50 p-4 lg:p-8 ">
-    <div className="mx-auto max-w-6xl">
-      
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-4 mt-24" >
+    <div className="min-h-screen bg-gray-50 p-4 lg:p-8">
+      <div className="mx-auto max-w-6xl">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-4 mt-24">
           {/* Sidebar */}
           <div className="space-y-6">
             <div className="relative">
               <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-              <Input placeholder="Search by title..." className="pl-10" />
-            </div>
-
-            <div className="space-y-4">
-              <h2 className="text-lg font-semibold">EVENT CATEGORIES</h2>
-
-              <div className="space-y-2">
-                <div className="flex justify-between items-center bg-gray-100 p-3 rounded">
-                  <span>All Events</span>
-                  <span className="text-gray-500">(49)</span>
-                </div>
-                <div className="flex justify-between items-center bg-gray-100 p-3 rounded">
-                  <span>Past Events</span>
-                  <span className="text-gray-500">(49)</span>
-                </div>
-                <div className="flex justify-between items-center bg-gray-100 p-3 rounded">
-                  <span>Upcoming Events</span>
-                  <span className="text-gray-500">(0)</span>
-                </div>
-              </div>
-
-              <div className="pt-4">
-                <h3 className="text-lg font-semibold mb-2">Categories</h3>
-                <div className="flex justify-between items-center p-3">
-                  <span>BVM US G2G meets</span>
-                  <span className="text-gray-500">(2)</span>
-                </div>
-              </div>
+              <Input
+                placeholder="Search by title..."
+                className="pl-10"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
             </div>
           </div>
 
           {/* Main Content */}
           <div className="md:col-span-3 space-y-6">
-            {events.map((event) => (
-              <Card key={event.id} className="overflow-hidden rounded-none">
-                <CardContent className="p-0 h-52">
-                  <div className="flex flex-col md:flex-row">
-                    <div className="md:w-1/3">
-                      <img
-                        src={event.image || "/placeholder.svg"}
-                        alt={event.title}
-                        width={400}
-                        height={250}
-                        className="h-full w-full object-cover"
-                      />
-                    </div>
-                    <div className="flex-1 p-6">
-                      <div className="flex justify-between items-start">
-                        <div className="space-y-4">
-                          <h3 className="text-xl font-semibold">{event.title}</h3>
-                          <div className="space-y-2 text-gray-600">
-                            <div className="flex items-center gap-2">
-                              <Calendar className="h-4 w-4" />
-                              <span>
-                                Starts: {event.startDate}
-                                {event.endDate && ` Ends: ${event.endDate}`}
-                                {event.time && ` - ${event.time}`}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <MapPin className="h-4 w-4" />
-                              <span>{event.location}</span>
-                            </div>
+            {loading ? (
+              <p>Loading events...</p>
+            ) : filteredEvents.length === 0 ? (
+              <p>No events found.</p>
+            ) : (
+              filteredEvents.map((event) => (
+                <Card
+                  key={event.event_id}
+                  className="overflow-hidden rounded-lg shadow-md"
+                >
+                  <CardContent className="p-0">
+                    <div className="flex flex-col md:flex-row">
+                      {/* Event Image */}
+                      <div className="w-full md:w-1/3 h-40 md:h-52">
+                        <img
+                          src={event.media_url || "/placeholder.svg"}
+                          alt={event.title}
+                          className="w-full h-full object-cover rounded-t-lg md:rounded-none md:rounded-l-lg"
+                        />
+                      </div>
+
+                      {/* Event Details */}
+                      <div className="flex-1 p-4 md:p-6">
+                        <h3 className="text-lg md:text-xl font-semibold">
+                          {event.title}
+                        </h3>
+                        <div className="space-y-2 text-gray-600 text-sm md:text-base mt-2">
+                          {/* Start & End Date */}
+                          <div className="flex items-center gap-2">
+                            <Calendar className="h-4 w-4 text-blue-600" />
+                            <span>
+                              Starts:{" "}
+                              {new Date(event.start_time).toLocaleDateString(
+                                "en-GB"
+                              )}
+                              {event.end_time &&
+                                ` • Ends: ${new Date(
+                                  event.end_time
+                                ).toLocaleDateString("en-GB")}`}
+                            </span>
+                          </div>
+
+                          {/* Location */}
+                          <div className="flex items-center gap-2">
+                            <MapPin className="h-4 w-4 text-red-500" />
+                            <span>{event.location}</span>
                           </div>
                         </div>
-                       
-                      </div>
-                      <div className="flex justify-between items-center p-3">
-                          <span className="rounded-full bg-gray-200 px-3 py-1 text-sm">Past Event</span>
-                          <Button className="bg-blue-600 hover:bg-blue-700 rounded-sm">VIEW</Button>
+
+                        {/* Status & View Button */}
+                        <div className="flex justify-between items-center mt-4">
+                          <span
+                            className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                              new Date(event.end_time) < new Date()
+                                ? "bg-gray-300 text-gray-700"
+                                : "bg-green-200 text-green-700"
+                            }`}
+                          >
+                            {new Date(event.end_time) < new Date()
+                              ? "Past Event"
+                              : "Upcoming Event"}
+                          </span>
+
+                          <Link
+                            to={`/events/${event.title
+                              .toLowerCase()
+                              .replace(/\s+/g, "-")}/${event.event_id}`}
+                          >
+                            <Button className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2">
+                              VIEW
+                            </Button>
+                          </Link>
                         </div>
+                      </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                  </CardContent>
+                </Card>
+              ))
+            )}
           </div>
         </div>
       </div>
     </div>
-  )
+  );
 }
 
-export default Event
+export default Event;

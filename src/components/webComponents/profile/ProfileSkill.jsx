@@ -12,81 +12,72 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import toast, { Toaster } from "react-hot-toast";
-
+import {
+  Pencil,
+  Trash
+} from "lucide-react";
 function ProfileSkill() {
-  const [skills, setSkills] = useState([]); // Store added skills
-  const [userId, setUserId] = useState(null); // Store user ID from localStorage
+  const [skills, setSkills] = useState([]);
+  const [userId, setUserId] = useState(null);
+  const [editingSkillId, setEditingSkillId] = useState(null); // Track skill being edited
   const [formData, setFormData] = useState({
-    user_id: "", // Include user_id
+    user_id: "",
     skill_name: "",
     proficiency_level: "",
   });
 
-  // Fetch user ID from localStorage when component mounts
   useEffect(() => {
     const storedUserId = localStorage.getItem("user_id");
     if (storedUserId) {
       setUserId(storedUserId);
-      setFormData((prevData) => ({ ...prevData, user_id: storedUserId }));
+      setFormData((prev) => ({ ...prev, user_id: storedUserId }));
       fetchUserSkills(storedUserId);
     } else {
       toast.error("User ID not found. Please log in again.");
     }
   }, []);
 
-  // Fetch existing user skills
   const fetchUserSkills = async (userId) => {
     try {
-      if (!userId) {
-        console.error("User ID is missing. Cannot fetch skills.");
-        return;
-      }
-  
       const token = localStorage.getItem("token");
-  
       if (!token) {
         toast.error("Authentication token missing. Please log in.");
         return;
       }
-  
+
       const response = await axios.get(
         `https://alumni-backend-drab.vercel.app/api/users/skills/${userId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
-  
-      console.log("Fetched Skills:", response.data); // Debugging
-  
+
       if (response.data && Array.isArray(response.data.data)) {
-        setSkills(response.data.data); // Accessing the correct array
+        setSkills(response.data.data);
       } else {
-        toast.error("Failed to fetch skills.");
-        setSkills([]); // Fallback to empty array
+        setSkills([]);
       }
     } catch (error) {
-      console.error("Failed to fetch skills:", error.response?.data || error.message);
       toast.error("Something went wrong.");
-      setSkills([]); // Prevent undefined errors
+      setSkills([]);
     }
   };
-  
-  
 
-  // Handle input changes
   const handleChange = (e) => {
     setFormData({ ...formData, skill_name: e.target.value });
   };
 
-  // Handle dropdown selection
   const handleProficiencyChange = (value) => {
     setFormData({ ...formData, proficiency_level: value });
   };
 
-  // Handle form submission
+  const handleEdit = (skill) => {
+    setEditingSkillId(skill.skill_id);
+    setFormData({
+      user_id: userId,
+      skill_name: skill.skill_name,
+      proficiency_level: skill.proficiency_level,
+    });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -95,88 +86,98 @@ function ProfileSkill() {
       return;
     }
 
-    if (!userId) {
-      toast.error("User ID not found. Please log in again.");
+    const token = localStorage.getItem("token");
+    if (!token) {
+      toast.error("Authentication token missing. Please log in.");
       return;
     }
 
     try {
-      const token = localStorage.getItem("token"); // Retrieve token from localStorage
+      if (editingSkillId) {
+        // Update existing skill
+        const response = await axios.put(
+          `https://alumni-backend-drab.vercel.app/api/users/skills/${editingSkillId}`,
+          { skill_name: formData.skill_name, proficiency_level: formData.proficiency_level },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
 
-      if (!token) {
-        toast.error("Authentication token missing. Please log in.");
-        return;
+        if (response.data.success) {
+          toast.success("Skill updated successfully!");
+          setSkills(
+            skills.map((skill) =>
+              skill.skill_id === editingSkillId
+                ? { ...skill, skill_name: formData.skill_name, proficiency_level: formData.proficiency_level }
+                : skill
+            )
+          );
+          setEditingSkillId(null); // Reset editing mode
+        } else {
+          toast.error("Failed to update skill.");
+        }
+      } else {
+        // Add new skill
+        const response = await axios.post(
+          "https://alumni-backend-drab.vercel.app/api/users/skills",
+          { user_id: userId, skill_name: formData.skill_name, proficiency_level: formData.proficiency_level },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        if (response.data.success) {
+          toast.success("Skill added successfully!");
+          setSkills([...skills, { skill_id: response.data.id, ...formData }]);
+        } else {
+          toast.error("Failed to add skill.");
+        }
       }
 
-      // Ensure `user_id` is included in the request payload
-      const payload = {
-        user_id: userId,
-        skill_name: formData.skill_name,
-        proficiency_level: formData.proficiency_level,
-      };
+      // Reset form after submission
+      setFormData({ user_id: userId, skill_name: "", proficiency_level: "" });
+    } catch (error) {
+      toast.error("Something went wrong.");
+    }
+  };
 
-      const response = await axios.post(
-        "https://alumni-backend-drab.vercel.app/api/users/skills",
-        payload,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`, // Add token to headers
-            "Content-Type": "application/json",
-          },
-        }
+  const handleDelete = async (skillId) => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      toast.error("Authentication token missing. Please log in.");
+      return;
+    }
+
+    try {
+      const response = await axios.delete(
+        `https://alumni-backend-drab.vercel.app/api/users/skills/${skillId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
       );
-
-      console.log(response.data); // Debugging: Check response data in console
 
       if (response.data.success) {
-        toast.success("Skill added successfully!");
-
-        setSkills([...skills, payload]); // Update UI dynamically
-        setFormData({ user_id: userId, skill_name: "", proficiency_level: "" }); // Reset form but retain user_id
+        toast.success("Skill deleted successfully!");
+        setSkills(skills.filter((skill) => skill.skill_id !== skillId));
       } else {
-        toast.error(response.data.message || "Failed to add skill.");
+        toast.error("Failed to delete skill.");
       }
     } catch (error) {
-      console.error("Error:", error.response?.data || error.message); // Debugging: Log error details
-      toast.error(
-        error.response?.data?.message ||
-          "Something went wrong. Please try again."
-      );
+      toast.error("Something went wrong.");
     }
   };
 
   return (
     <div className="mx-auto">
-      <Toaster position="top-right" reverseOrder={false} />
+      <Toaster position="top-right" />
       <Card className="rounded-none">
         <CardHeader>
-          <CardTitle>Add Your Skills</CardTitle>
+          <CardTitle>{editingSkillId ? "Edit Skill" : "Add Your Skills"}</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Skill Name Input */}
             <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Skill Name
-              </label>
-              <Input
-                type="text"
-                placeholder="Enter skill (e.g., JavaScript)"
-                value={formData.skill_name}
-                onChange={handleChange}
-                required
-              />
+              <label className="block text-sm font-medium text-gray-700">Skill Name</label>
+              <Input type="text" placeholder="Enter skill" value={formData.skill_name} onChange={handleChange} required />
             </div>
 
-            {/* Proficiency Level Dropdown */}
             <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Proficiency Level
-              </label>
-              <Select
-                onValueChange={handleProficiencyChange}
-                value={formData.proficiency_level}
-              >
+              <label className="block text-sm font-medium text-gray-700">Proficiency Level</label>
+              <Select onValueChange={handleProficiencyChange} value={formData.proficiency_level}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select Level" />
                 </SelectTrigger>
@@ -188,32 +189,32 @@ function ProfileSkill() {
               </Select>
             </div>
 
-            {/* Submit Button */}
-            <Button
-              type="submit"
-              className="rounded-sm bg-blue-600 hover:bg-blue-700 text-white"
-            >
-              Add Skill
+            <Button type="submit" className="rounded-sm bg-blue-600 hover:bg-blue-700 text-white">
+              {editingSkillId ? "Update Skill" : "Add Skill"}
             </Button>
           </form>
 
           <Separator className="my-4" />
 
-          {/* Display Added Skills */}
           <h3 className="text-lg font-semibold mb-2">Your Skills</h3>
           {skills.length === 0 ? (
             <p className="text-gray-500">No skills added yet.</p>
           ) : (
             <ul className="space-y-2">
-              {skills.map((skill, index) => (
-                <li
-                  key={index}
-                  className="flex justify-between bg-gray-100 p-2 rounded-md"
-                >
-                  <span className="font-medium">{skill.skill_name}</span>
-                  <span className="text-sm text-gray-700">
-                    {skill.proficiency_level}
-                  </span>
+              {skills.map((skill) => (
+                <li key={skill.skill_id} className="flex justify-between items-center bg-gray-100 p-2 ">
+                  <div className="space-x-2">
+                    <span className="font-medium">{skill.skill_name}</span> 
+                    <span className="text-sm text-gray-700 bg-gray-300 rounded-sm p-1">{skill.proficiency_level}</span>
+                  </div>
+                  <div className="space-x-2">
+                    <Button size="sm" className="bg-color-none hover:bg-gray-200 text-gray-900" onClick={() => handleEdit(skill)}>
+                    <Pencil />
+                    </Button>
+                    <Button size="sm" className="bg-color-none hover:bg-gray-200 text-red-900" onClick={() => handleDelete(skill.skill_id)}>
+                    <Trash />
+                    </Button>
+                  </div>
                 </li>
               ))}
             </ul>
