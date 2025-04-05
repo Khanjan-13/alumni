@@ -12,7 +12,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { toast } from "react-hot-toast";
+import toast, { Toaster } from "react-hot-toast";
 
 export default function Profile() {
   const [formData, setFormData] = useState({
@@ -39,6 +39,9 @@ export default function Profile() {
     profile_image: null, // Store file object
   });
   const [previewUrl, setPreviewUrl] = useState(null); // Store image preview
+  const [isProfileExists, setIsProfileExists] = useState(false);
+  const [profileId, setProfileId] = useState(null); // Store profile_id
+
   // Cleanup function to revoke object URL when the component unmounts
   useEffect(() => {
     return () => {
@@ -55,13 +58,12 @@ export default function Profile() {
         ...prev,
         profile_image: file, // Store the file
       }));
-  
+
       // Create preview URL
       const imageUrl = URL.createObjectURL(file);
       setPreviewUrl(imageUrl);
     }
   };
-  
 
   const token = localStorage.getItem("token");
   const userId = localStorage.getItem("user_id");
@@ -84,11 +86,14 @@ export default function Profile() {
           }
         );
         console.log(response);
-        if (response.status === 200) {
-          setFormData((prevState) => ({
-            ...prevState,
-            ...(response.data.data.profileData || {}), // Ensure profileData is an object
-          }));
+        if (response.status === 200 && response.data?.data) {
+          const profileData = response.data.data.profileData || {};
+          setFormData((prevState) => ({ ...prevState, ...profileData }));
+
+          if (profileData.profile_id) {
+            setProfileId(profileData.profile_id); // Store profile_id
+            setIsProfileExists(true);
+          }
         } else {
           toast.error("Failed to load profile data.");
         }
@@ -113,13 +118,13 @@ export default function Profile() {
 
   const submitForm = async (e) => {
     e.preventDefault();
-  
+
     try {
       if (!token || !userId) {
         toast.error("Authentication token or User ID is missing.");
         return;
       }
-  
+
       const formDataToSend = new FormData();
       formDataToSend.append("user_id", userId);
       formDataToSend.append("name", formData.name);
@@ -140,56 +145,73 @@ export default function Profile() {
       formDataToSend.append("current_address", formData.current_address);
       formDataToSend.append("office_address", formData.office_address);
       formDataToSend.append("contact_number", formData.contact_number);
-      formDataToSend.append("alternate_contact_number", formData.alternate_contact_number);
+      formDataToSend.append(
+        "alternate_contact_number",
+        formData.alternate_contact_number
+      );
       formDataToSend.append("bio", formData.bio);
-  
+
       // Append profile image only if a new one is selected
       if (formData.profile_image) {
-        formDataToSend.append("profile_image", formData.profile_image); // Ensure this matches backend expectations
+        formDataToSend.append("media", formData.profile_image); // Ensure this matches backend expectations
       }
-  
+
       let response;
-      
-      // Check if the profile exists
-      const profileCheck = await axios.get(
-        `https://alumni-backend-drab.vercel.app/api/users/profile/${userId}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-  
-      if (profileCheck.data?.success && profileCheck.data?.data) {
-        // Profile exists -> Update profile
+
+      if (isProfileExists && profileId) {
+        // Update existing profile
         response = await axios.put(
-          `https://alumni-backend-drab.vercel.app/api/users/profile/${userId}`,
+          `https://alumni-backend-drab.vercel.app/api/users/profile/${profileId}`,
           formDataToSend,
-          {
-            headers: { Authorization: `Bearer ${token}` },
+          { 
+            headers: { 
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'multipart/form-data',
+            },
+            validateStatus: function (status) {
+              return status >= 200 && status < 500; // Accept status codes between 200 and 499
+            }
           }
         );
+        
+        if (response.status === 400) {
+          throw new Error(response.data?.message || 'Bad Request - Please check your input data');
+        }
+        
+        console.log('Update Response:', response);
       } else {
-        // Profile does not exist -> Create profile
+        // Create new profile
         response = await axios.post(
           "https://alumni-backend-drab.vercel.app/api/users/profile",
           formDataToSend,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
+          { headers: { Authorization: `Bearer ${token}` } }
         );
+        if (response.status === 201 && response.data?.data?.profile_id) {
+          setProfileId(response.data.data.profile_id); // Store new profile_id
+          setIsProfileExists(true);
+        }
       }
-  
+
       if (response.status === 200 || response.status === 201) {
-        toast.success(profileCheck.data?.data ? "Profile updated!" : "Profile created!");
+        toast.success(
+          isProfileExists ? "Profile updated!" : "Profile created!"
+        );
       } else {
         toast.error("Profile update failed.");
       }
     } catch (error) {
       console.error("Profile update error:", error);
-      toast.error(error.response?.data?.message || "An error occurred while updating profile.");
+      toast.error(
+        error.response?.data?.message ||
+          "An error occurred while updating profile."
+      );
     }
   };
-  
 
   return (
     <div className="mx-auto">
+            <Toaster position="top-right" />
+      
       <Card className="rounded-none">
         <CardHeader>
           <CardTitle>Update Profile</CardTitle>
@@ -216,6 +238,14 @@ export default function Profile() {
                 />
               </div>
             )}
+
+            <div className="mb-4">
+              <img
+                src={formData.photo}
+                alt="Profile"
+                className="w-32 h-32 rounded-full object-cover"
+              />
+            </div>
 
             <div className="mb-4">
               <label className="block text-gray-700">Full Name</label>
@@ -481,12 +511,12 @@ export default function Profile() {
               />
             </div>
 
-            <Button
+            <button
               type="submit"
               className="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-700 transition"
             >
-              Update Profile
-            </Button>
+              {isProfileExists ? "Update Profile" : "Create Profile"}
+            </button>
           </form>
         </CardContent>
       </Card>

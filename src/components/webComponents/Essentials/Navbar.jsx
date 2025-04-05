@@ -29,6 +29,7 @@ function Navbar() {
   const token = localStorage.getItem("token");
   const userId = localStorage.getItem("user_id");
   const [userName, setUserName] = useState("");
+  const [image, setImage] = useState("");
   const [menuOpen, setMenuOpen] = useState(false); // Track mobile menu state
 
   // Logout function
@@ -60,12 +61,15 @@ function Navbar() {
 
         if (response.status === 200) {
           setUserName(response.data.data.profileData?.name || "User");
+          setImage(response.data.data.profileData?.photo);
         } else {
           toast.error("Failed to load profile data.");
         }
       } catch (error) {
         console.error("Error fetching profile data:", error);
-        toast.error(error.response?.data?.message || "Error loading profile data.");
+        toast.error(
+          error.response?.data?.message || "Error loading profile data."
+        );
       }
     };
 
@@ -90,10 +94,31 @@ function Navbar() {
                     <li>
                       <span className="flex items-center gap-2 font-semibold">
                         <Avatar>
-                          <AvatarImage src="https://github.com/shadcn.png" />
-                          <AvatarFallback>CN</AvatarFallback>
+                          <AvatarImage
+                            src="{image}"
+                            className="rounded-full object-cover"
+                          />
+                          {image && (
+                            <img
+                              src={image}
+                              alt="Profile"
+                              className="rounded-full object-cover"
+                            />
+                          )}
+
+                          <AvatarFallback>
+                            {" "}
+                            {userName
+                              ?.split(" ")
+                              .map((word) => word.charAt(0))
+                              .slice(0, 2)
+                              .join("")
+                              .toUpperCase()}
+                          </AvatarFallback>
                         </Avatar>
-                        <span className="hidden md:flex">Hello! {userName}</span>
+                        <span className="hidden md:flex">
+                          Hello! {userName}
+                        </span>
                       </span>
                     </li>
                     <li>
@@ -102,12 +127,21 @@ function Navbar() {
                           <EllipsisVertical size={20} />
                         </DropdownMenuTrigger>
                         <DropdownMenuContent className="uppercase text-blue-600 w-52 font-medium mr-4">
-                          <DropdownMenuItem className="p-3">Profile</DropdownMenuItem>
+                          <NavLink to="/my-profile">
+                            <DropdownMenuItem className="p-3">
+                              Profile
+                            </DropdownMenuItem>
+                          </NavLink>
                           <NavLink to="/settings">
-                            <DropdownMenuItem className="p-3">Manage Profile</DropdownMenuItem>
+                            <DropdownMenuItem className="p-3">
+                              Manage Profile
+                            </DropdownMenuItem>
                           </NavLink>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem className="p-3" onClick={handleLogout}>
+                          <DropdownMenuItem
+                            className="p-3"
+                            onClick={handleLogout}
+                          >
                             Logout
                           </DropdownMenuItem>
                         </DropdownMenuContent>
@@ -147,7 +181,7 @@ function Navbar() {
             <li>
               <NavLink
                 to="/feed"
-                className="flex items-center space-x-2 p-3 hover:bg-blue-800 transition-colors font-medium uppercase"
+                className="flex items-center space-x-2 p-3 hover:bg-blue-800 transition-colors font-medium uppercase"  onClick={() => setMenuOpen(!menuOpen)}
               >
                 <Rss size={20} />
                 <span>FEED</span>
@@ -156,19 +190,19 @@ function Navbar() {
             <li className="hidden md:block">|</li>
             <li>
               <NavLink
-                to="#"
-                className="flex items-center space-x-2 p-3 hover:bg-blue-800 transition-colors font-medium uppercase"
+                to="/alumni-network"
+                className="flex items-center space-x-2 p-3 hover:bg-blue-800 transition-colors font-medium uppercase"  onClick={() => setMenuOpen(!menuOpen)}
               >
                 <GraduationCap size={20} />
                 <span>
                   <DropdownMenu>
                     <DropdownMenuTrigger className="uppercase focus:outline-none flex items-center justify-center gap-1">
-                      Alumni Network <ChevronDown size={17} />
+                      Alumni Network
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent className="uppercase text-blue-600 w-52 font-medium">
+                    {/* <DropdownMenuContent className="uppercase text-blue-600 w-52 font-medium">
                       <DropdownMenuItem className="p-3">Alumni Directory</DropdownMenuItem>
                       <DropdownMenuItem className="p-3">Groups</DropdownMenuItem>
-                    </DropdownMenuContent>
+                    </DropdownMenuContent> */}
                   </DropdownMenu>
                 </span>
               </NavLink>
@@ -177,7 +211,7 @@ function Navbar() {
             <li>
               <NavLink
                 to="/events"
-                className="flex items-center space-x-2 p-3 hover:bg-blue-800 transition-colors font-medium uppercase"
+                className="flex items-center space-x-2 p-3 hover:bg-blue-800 transition-colors font-medium uppercase"  onClick={() => setMenuOpen(!menuOpen)}
               >
                 <CalendarFold size={20} />
                 <span>Events</span>
@@ -186,8 +220,8 @@ function Navbar() {
             <li className="hidden md:block">|</li>
             <li>
               <NavLink
-                to="#"
-                className="flex items-center space-x-2 p-3 hover:bg-blue-800 transition-colors font-medium uppercase"
+                to="/jobs"
+                className="flex items-center space-x-2 p-3 hover:bg-blue-800 transition-colors font-medium uppercase"  onClick={() => setMenuOpen(!menuOpen)}
               >
                 <BriefcaseBusiness size={20} />
                 <span>Jobs & Opportunities</span>
@@ -197,7 +231,7 @@ function Navbar() {
             <li>
               <NavLink
                 to="#"
-                className="flex items-center space-x-2 p-3 hover:bg-blue-800 transition-colors font-medium uppercase"
+                className="flex items-center space-x-2 p-3 hover:bg-blue-800 transition-colors font-medium uppercase"  onClick={() => setMenuOpen(!menuOpen)}
               >
                 <HeartHandshake size={20} />
                 <span>
@@ -206,8 +240,12 @@ function Navbar() {
                       Alumni Support <ChevronDown size={17} />
                     </DropdownMenuTrigger>
                     <DropdownMenuContent className="uppercase text-blue-600 w-52 font-medium">
-                      <DropdownMenuItem className="p-3">Find your documents</DropdownMenuItem>
-                      <DropdownMenuItem className="p-3">Donations</DropdownMenuItem>
+                      <DropdownMenuItem className="p-3">
+                        Find your documents
+                      </DropdownMenuItem>
+                      <DropdownMenuItem className="p-3">
+                        Donations
+                      </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </span>

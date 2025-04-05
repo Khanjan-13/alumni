@@ -3,6 +3,7 @@ import axios from "axios";
 import toast, { Toaster } from "react-hot-toast";
 import { useNavigate } from "react-router-dom"; // Corrected import
 
+import bvm from "@/assets/bvm.jpg";
 
 
 function Login() {
@@ -57,75 +58,85 @@ function Login() {
   
   
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      {/* React Hot Toast Container */}
-      <Toaster position="top-center" reverseOrder={false} />
+    <div
+    className="min-h-screen flex items-center justify-center bg-cover bg-center relative"
+    style={{
+      backgroundImage: `url(${bvm})`,
+    }}
+  >
+    {/* Overlay */}
+    <div className="absolute inset-0 bg-blue-900 opacity-50 z-0" />
 
-      <div className="bg-white shadow-lg rounded-lg w-full max-w-md p-8">
-        <h2 className="text-2xl font-semibold text-gray-800 text-center mb-6">
-          Log In to Your Account
-        </h2>
-        <form onSubmit={handleSubmit}>
-          {/* Email Input */}
-          <div className="mb-4">
-            <label
-              htmlFor="email"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Email Address
-            </label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              placeholder="Enter your email"
-              value={formData.email}
-              onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500"
-              required
-            />
-          </div>
+    {/* React Hot Toast */}
+    <Toaster position="top-center" reverseOrder={false} />
 
-          {/* Password Input */}
-          <div className="mb-6">
-            <label
-              htmlFor="password"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Password
-            </label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              placeholder="Enter your password"
-              value={formData.password}
-              onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500"
-              required
-            />
-          </div>
-
-          {/* Submit Button */}
-          <button
-            type="submit"
-            className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm rounded-lg shadow focus:outline-none focus:ring-2 focus:ring-blue-500"
+    {/* Login Card */}
+    <div className="relative z-10 bg-white/20 backdrop-blur-lg shadow-xl rounded-xl w-full max-w-md p-8 border border-white/30">
+      <h2 className="text-3xl font-bold text-white text-center mb-6">
+        Log In to Your Account
+      </h2>
+      <form onSubmit={handleSubmit}>
+        {/* Email */}
+        <div className="mb-4">
+          <label
+            htmlFor="email"
+            className="block text-sm font-medium text-white mb-1"
           >
-            Log In
-          </button>
-        </form>
+            Email Address
+          </label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            placeholder="Enter your email"
+            value={formData.email}
+            onChange={handleChange}
+            className="w-full px-4 py-2 border border-white/40 text-white bg-white/10 rounded-lg placeholder-white/70 focus:ring-2 focus:ring-blue-400 focus:outline-none"
+            required
+          />
+        </div>
 
-        <p className="mt-6 text-center text-sm text-gray-600">
-          Don't have an account?{" "}
-          <a
-            href="/signup"
-            className="text-blue-600 hover:underline hover:text-blue-700"
+        {/* Password */}
+        <div className="mb-6">
+          <label
+            htmlFor="password"
+            className="block text-sm font-medium text-white mb-1"
           >
-            Sign Up
-          </a>
-        </p>
-      </div>
+            Password
+          </label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            placeholder="Enter your password"
+            value={formData.password}
+            onChange={handleChange}
+            className="w-full px-4 py-2 border border-white/40 text-white bg-white/10 rounded-lg placeholder-white/70 focus:ring-2 focus:ring-blue-400 focus:outline-none"
+            required
+          />
+        </div>
+
+        {/* Submit */}
+        <button
+          type="submit"
+          className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm rounded-lg shadow focus:outline-none focus:ring-2 focus:ring-blue-400"
+        >
+          Log In
+        </button>
+      </form>
+
+      <p className="mt-6 text-center text-sm text-white">
+        Don&apos;t have an account?{" "}
+        <a
+          href="/signup"
+          className="text-blue-300 hover:underline hover:text-blue-200"
+        >
+          Sign Up
+        </a>
+      </p>
     </div>
+  </div>
+
   );
 }
 

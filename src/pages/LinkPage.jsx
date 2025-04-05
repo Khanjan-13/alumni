@@ -14,6 +14,10 @@ import Dashboard from "./Admin/Dashboard";
 import AdminEvent from "./Admin/AdminEvent";
 import AdminAlumni from "./Admin/AdminAlumni";
 import EventDetail from "./Events/EventDetail";
+import ProfileHome from "@/components/webComponents/profile/ProfileHome";
+import AlumniNetwork from "./AlumniNetwork";
+import UserProfile from "./ProfileManage/UserProfile";
+import Jobs from "./Jobs/Jobs";
 const Format = () => {
   return (
     <div>
@@ -54,6 +58,10 @@ const router = createBrowserRouter([
       {
         path: "/events",
         element: <Event />,
+      }, 
+      {
+        path: "/alumni-network",
+        element: <AlumniNetwork />,
       },
       {
         path: "/events/:slug/:id",
@@ -76,10 +84,34 @@ const router = createBrowserRouter([
         ),
       },
       {
+        path: "/profile/:user_id",
+        element: (
+          <ProtectedRoutes>
+            <UserProfile />
+          </ProtectedRoutes>
+        ),
+      },
+      {
         path: "/settings",
         element: (
           <ProtectedRoutes>
             <Profile />
+          </ProtectedRoutes>
+        ),
+      },
+      {
+        path: "/my-profile",
+        element: (
+          <ProtectedRoutes>
+            <ProfileHome />
+          </ProtectedRoutes>
+        ),
+      },
+      {
+        path: "/jobs",
+        element: (
+          <ProtectedRoutes>
+            <Jobs />
           </ProtectedRoutes>
         ),
       },

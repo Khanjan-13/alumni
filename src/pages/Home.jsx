@@ -34,9 +34,7 @@ function Home() {
                   <p className="text-xl text-blue-100 mb-6">
                     Stay connected, get involved, and make a difference.
                   </p>
-                  <button className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg shadow-lg transition duration-300">
-                    Update Your Profile
-                  </button>
+                  
                 </div>
               </div>
 

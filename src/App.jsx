@@ -6,8 +6,7 @@ function App() {
 
   return (
     <>
-     <LinkPage/>
-       
+     <LinkPage/>  
     </>
   )
 }

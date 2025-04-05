@@ -12,7 +12,7 @@ function ProfileNavbar() {
       <nav className="space-y-2 max-h-max bg-white border p-4 shadow-sm sticky top-0">
         <ul className="space-y-1">
           {[
-            "Profile Photo",
+           
             "Profile Details",
             "Work Experience",
             "Education",
@@ -37,7 +37,7 @@ function ProfileNavbar() {
 
       {/* Main Content Area */}
       <div className="flex-1">
-        {activeSection === "Profile Photo" && <ProfilePhoto />}
+        {/* {activeSection === "Profile Photo" && <ProfilePhoto />} */}
         {activeSection === "Profile Details" && <PersonalInfo />}
         {activeSection === "Work Experience" && <ProfileWork />}
         {activeSection === "Education" && <ProfileEducation />}

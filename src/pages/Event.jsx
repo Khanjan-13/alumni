@@ -44,20 +44,19 @@ function Event() {
       <div className="mx-auto max-w-6xl">
         <div className="grid grid-cols-1 gap-6 md:grid-cols-4 mt-24">
           {/* Sidebar */}
-          <div className="space-y-6">
-            <div className="relative">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+          <div className="space-y-6 md:col-span-1">
+            <div className=" max-w-md mx-auto fixed">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
               <Input
                 placeholder="Search by title..."
-                className="pl-10"
+                className="pl-10 w-full"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
           </div>
-
           {/* Main Content */}
-          <div className="md:col-span-3 space-y-6">
+          <div className="md:col-span-3 space-y-6 mt-10 md:mt-0">
             {loading ? (
               <p>Loading events...</p>
             ) : filteredEvents.length === 0 ? (

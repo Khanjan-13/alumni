@@ -5,7 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import toast, { Toaster } from "react-hot-toast";
-
+import {
+  Pencil,
+  Trash
+} from "lucide-react";
 function ProfileEducation() {
   const [educationList, setEducationList] = useState([]);
   const [userId, setUserId] = useState(null);
@@ -240,7 +243,7 @@ function ProfileEducation() {
               onChange={handleChange}
             />
 
-            <Button type="submit">
+            <Button type="submit" className="bg-blue-500">
               {editingEducationId ? "Update Education" : "Add Education"}
             </Button>
           </form>
@@ -257,14 +260,14 @@ function ProfileEducation() {
                 {edu.institution_name} - {edu.degree} ({edu.branch})
               </div>
               <div>
-                <Button size="sm" onClick={() => handleEdit(edu)}>
-                  Edit
+                <Button size="sm" onClick={() => handleEdit(edu)} className="bg-color-none text-black hover:bg-gray-200">
+                    <Pencil />
                 </Button>
                 <Button
                   size="sm"
-                  onClick={() => handleDelete(edu.education_id)}
+                  onClick={() => handleDelete(edu.education_id)} className="bg-color-none text-black hover:bg-gray-200"
                 >
-                  Delete
+                    <Trash />
                 </Button>
               </div>
             </div>

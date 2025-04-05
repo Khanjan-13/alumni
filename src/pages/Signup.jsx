@@ -9,6 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import bvm from "@/assets/bvm.jpg";
 
 function Signup() {
   const [formData, setFormData] = useState({
@@ -101,106 +102,120 @@ function Signup() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <Toaster position="top-right" reverseOrder={false} />
-      <div className="bg-white shadow-lg w-full max-w-md p-8">
-        <h2 className="text-2xl font-semibold text-gray-800 text-center mb-6">
-          Create an Account
-        </h2>
-        <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label
-              htmlFor="email"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Email Address
-            </label>
-            <Input
-              type="email"
-              id="email"
-              name="email"
-              placeholder="Enter your email"
-              value={formData.email}
-              onChange={handleChange}
-              required
-            />
-          </div>
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Role
-            </label>
-            <Select
-              onValueChange={handleRoleChange}
-              value={formData.userType}
-              disabled={formData.isStudentEmail || formData.isFacultyEmail} // Disable if student or faculty
-            >
-              <SelectTrigger>
-                <SelectValue placeholder={formData.userType || "Select Role"} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="alumni">Alumni</SelectItem>
-                <SelectItem value="faculty" disabled={formData.isFacultyEmail}>
-                  Faculty {formData.isFacultyEmail ? "(Auto-Selected)" : ""}
-                </SelectItem>
-                <SelectItem value="alumni-faculty">Alumni/Faculty</SelectItem>
-                <SelectItem value="student" disabled={formData.isStudentEmail}>
-                  Student {formData.isStudentEmail ? "(Auto-Selected)" : ""}
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="mb-4">
-            <label
-              htmlFor="password"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Password
-            </label>
-            <Input
-              type="password"
-              id="password"
-              name="password"
-              placeholder="Create a password"
-              value={formData.password}
-              onChange={handleChange}
-              required
-            />
-          </div>
-          <div className="mb-6">
-            <label
-              htmlFor="confirmPassword"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Confirm Password
-            </label>
-            <Input
-              type="password"
-              id="confirmPassword"
-              name="confirmPassword"
-              placeholder="Confirm your password"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              required
-            />
-          </div>
-          <button
-            type="submit"
-            className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm rounded-lg shadow focus:outline-none focus:ring-2 focus:ring-blue-500"
+    <div
+    className="min-h-screen flex items-center justify-center bg-cover bg-center relative"
+    style={{
+      backgroundImage: `url(${bvm})`,
+    }}
+  >
+    {/* Overlay */}
+    <div className="absolute inset-0 bg-blue-900 opacity-50 z-0" />
+
+    {/* Toast Notifications */}
+    <Toaster position="top-right" reverseOrder={false} />
+
+    {/* Sign Up Card */}
+    <div className="relative z-10 bg-white/20 backdrop-blur-lg shadow-xl w-full max-w-md p-8 rounded-xl border border-white/30">
+      <h2 className="text-3xl font-bold text-white text-center mb-6">
+        Create an Account
+      </h2>
+
+      <form onSubmit={handleSubmit}>
+        {/* Email */}
+        <div className="mb-4">
+          <label htmlFor="email" className="block text-sm font-medium text-white mb-1">
+            Email Address
+          </label>
+          <Input
+            type="email"
+            id="email"
+            name="email"
+            placeholder="Enter your email"
+            value={formData.email}
+            onChange={handleChange}
+            className="w-full px-4 py-2 border border-white/40 text-white bg-white/10 rounded-lg placeholder-white/70 focus:ring-2 focus:ring-blue-400 focus:outline-none"
+            required
+          />
+        </div>
+
+        {/* Role */}
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-white mb-1">Role</label>
+          <Select
+            onValueChange={handleRoleChange}
+            value={formData.userType}
+            disabled={formData.isStudentEmail || formData.isFacultyEmail}
           >
-            Sign Up
-          </button>
-        </form>
-        <p className="mt-6 text-center text-sm text-gray-600">
-          Already have an account?{" "}
-          <a
-            href="/login"
-            className="text-blue-600 hover:underline hover:text-blue-700"
-          >
-            Log In
-          </a>
-        </p>
-      </div>
+            <SelectTrigger className="bg-white/10 text-white border-white/30">
+              <SelectValue placeholder={formData.userType || "Select Role"} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="alumni">Alumni</SelectItem>
+              <SelectItem value="faculty" disabled={formData.isFacultyEmail}>
+                Faculty {formData.isFacultyEmail ? "(Auto-Selected)" : ""}
+              </SelectItem>
+              <SelectItem value="alumni-faculty">Alumni/Faculty</SelectItem>
+              <SelectItem value="student" disabled={formData.isStudentEmail}>
+                Student {formData.isStudentEmail ? "(Auto-Selected)" : ""}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Password */}
+        <div className="mb-4">
+          <label htmlFor="password" className="block text-sm font-medium text-white mb-1">
+            Password
+          </label>
+          <Input
+            type="password"
+            id="password"
+            name="password"
+            placeholder="Create a password"
+            value={formData.password}
+            onChange={handleChange}
+            className="w-full px-4 py-2 border border-white/40 text-white bg-white/10 rounded-lg placeholder-white/70 focus:ring-2 focus:ring-blue-400 focus:outline-none"
+            required
+          />
+        </div>
+
+        {/* Confirm Password */}
+        <div className="mb-6">
+          <label htmlFor="confirmPassword" className="block text-sm font-medium text-white mb-1">
+            Confirm Password
+          </label>
+          <Input
+            type="password"
+            id="confirmPassword"
+            name="confirmPassword"
+            placeholder="Confirm your password"
+            value={formData.confirmPassword}
+            onChange={handleChange}
+            className="bg-white/10 text-white placeholder-white/70 border-white/30"
+            required
+          />
+        </div>
+
+        {/* Submit */}
+        <button
+          type="submit"
+          className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm rounded-lg shadow focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          Sign Up
+        </button>
+      </form>
+
+      <p className="mt-6 text-center text-sm text-white">
+        Already have an account?{" "}
+        <a
+          href="/login"
+          className="text-blue-300 hover:underline hover:text-blue-200"
+        >
+          Log In
+        </a>
+      </p>
     </div>
+  </div>
   );
 }
 
