@@ -51,7 +51,7 @@ const AlumniNetwork = () => {
     setFilteredAlumni(filtered);
   }, [searchQuery, selectedBranch, alumni]);
 
-  const branches = ["Computer", "Mechanical", "Civil", "Electrical", "Information Technology"];
+  const branches = ["Computer Engineering", "Mechanical Engineering", "Civil Engineering", "Electrical Engineering", "Information Technology"];
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 lg:p-8">

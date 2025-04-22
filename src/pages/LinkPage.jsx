@@ -18,6 +18,8 @@ import ProfileHome from "@/components/webComponents/profile/ProfileHome";
 import AlumniNetwork from "./AlumniNetwork";
 import UserProfile from "./ProfileManage/UserProfile";
 import Jobs from "./Jobs/Jobs";
+import AdminProtectedRoutes from "@/AdminProtectedRoutes";
+import Unauthorized from "@/Unauthorized";
 const Format = () => {
   return (
     <div>
@@ -32,20 +34,25 @@ const router = createBrowserRouter([
     element: <Signup />,
   },
   {
-    path:"/register",
-    element:<Login />,
+    path: "/register",
+    element: <Login />,
   },
   {
-    path:"/admin/home",
-    element:<Dashboard />
-  }, 
-  {
-    path:"/admin/events",
-    element:<AdminEvent />
+    path: "/admin/home",
+
+    element: (
+      <AdminProtectedRoutes>
+        <Dashboard />
+      </AdminProtectedRoutes>
+    ),
   },
   {
-    path:"/admin/alumni",
-    element:<AdminAlumni />
+    path: "/admin/events",
+    element: <AdminEvent />,
+  },
+  {
+    path: "/admin/alumni",
+    element: <AdminAlumni />,
   },
   {
     path: "/",
@@ -58,7 +65,7 @@ const router = createBrowserRouter([
       {
         path: "/events",
         element: <Event />,
-      }, 
+      },
       {
         path: "/alumni-network",
         element: <AlumniNetwork />,
@@ -121,7 +128,10 @@ const router = createBrowserRouter([
     path: "/login",
     element: <Login />,
   },
-  
+  {
+    path: "/unauthorized",
+    element: <Unauthorized />,
+  },
 ]);
 function LinkPage() {
   return (

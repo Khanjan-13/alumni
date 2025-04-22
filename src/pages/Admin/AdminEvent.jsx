@@ -38,8 +38,66 @@ function AdminEvent() {
     end_time: "",
     created_by: "",
   });
+
   const [editEvent, setEditEvent] = useState(null);
   const [eventImage, setEventImage] = useState(null);
+
+  //Pagination
+  const itemsPerPage = 7;
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const totalPages = Math.ceil(events.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const currentEvents = events.slice(startIndex, startIndex + itemsPerPage);
+
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
+
+  const [registrationCounts, setRegistrationCounts] = useState({});
+
+  const checkRegistration = async (event_id) => {
+    try {
+      const response = await axios.get(
+        `https://alumni-backend-drab.vercel.app/api/users/events/${event_id}/registration-count`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const count = response.data?.data || 0;
+      console.log(count);
+      setRegistrationCounts((prev) => ({
+        ...prev,
+        [event_id]: count,
+      }));
+    } catch (err) {
+      console.error(`Error fetching registrations for event ${event_id}:`, err);
+      setRegistrationCounts((prev) => ({
+        ...prev,
+        [event_id]: "Error",
+      }));
+    }
+  };
+  useEffect(() => {
+    events.forEach((event) => {
+      checkRegistration(event.event_id);
+    });
+  }, [events]);
+
+  //Date
+  const [currentDateTime, setCurrentDateTime] = useState("");
+  useEffect(() => {
+    const now = new Date();
+    const localISOTime = new Date(
+      now.getTime() - now.getTimezoneOffset() * 60000
+    )
+      .toISOString()
+      .slice(0, 16); // "YYYY-MM-DDTHH:MM"
+    setCurrentDateTime(localISOTime);
+  }, []);
 
   const token = localStorage.getItem("token");
   const user_id = localStorage.getItem("user_id");
@@ -70,7 +128,7 @@ function AdminEvent() {
       setEventImage(file);
     }
   };
-  
+
   // Function to add event
   const handleAddEvent = async () => {
     if (!newEvent.title || !newEvent.start_time || !newEvent.end_time) {
@@ -140,59 +198,62 @@ function AdminEvent() {
     setIsEditDialogOpen(true);
   };
 
- const handleEditEvent = async () => {
-  if (!editEvent || !editEvent.title || !editEvent.start_time || !editEvent.end_time) {
-    toast.error("Title, Start Time, and End Time are required!");
-    return;
-  }
+  const handleEditEvent = async () => {
+    if (
+      !editEvent ||
+      !editEvent.title ||
+      !editEvent.start_time ||
+      !editEvent.end_time
+    ) {
+      toast.error("Title, Start Time, and End Time are required!");
+      return;
+    }
 
-  const formData = new FormData();
-  formData.append("title", editEvent.title);
-  formData.append("description", editEvent.description);
-  formData.append("location", editEvent.location);
-  formData.append("start_time", editEvent.start_time);
-  formData.append("end_time", editEvent.end_time);
+    const formData = new FormData();
+    formData.append("title", editEvent.title);
+    formData.append("description", editEvent.description);
+    formData.append("location", editEvent.location);
+    formData.append("start_time", editEvent.start_time);
+    formData.append("end_time", editEvent.end_time);
 
-  if (eventImage) {
-    formData.append("image", eventImage);
-  }
+    if (eventImage) {
+      formData.append("media", eventImage);
+    }
 
-  console.log("Sending FormData:", [...formData.entries()]);
+    console.log("Sending FormData:", [...formData.entries()]);
 
-  try {
-    const response = await axios.put(
-      `https://alumni-backend-drab.vercel.app/api/users/events/${editEvent.event_id}`,
-      formData,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "multipart/form-data",
-        },
-      }
-    );
-
-    console.log("Update Response:", response.data);
-
-    if (response.status === 200) {
-      setEvents((prevEvents) =>
-        prevEvents.map((event) =>
-          event.event_id === editEvent.event_id ? response.data.data : event
-        )
+    try {
+      const response = await axios.put(
+        `https://alumni-backend-drab.vercel.app/api/users/events/${editEvent.event_id}`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
+        }
       );
 
-      toast.success("Event updated successfully!");
-      setIsEditDialogOpen(false);
-      setEditEvent(null);
-      setEventImage(null);
-    }
-  } catch (error) {
-    console.error("Error updating event:", error.response?.data || error);
-    toast.error("Failed to update event!");
-  }
-};
+      console.log("Update Response:", response.data);
 
-  
-  
+      if (response.status === 200) {
+        setEvents((prevEvents) =>
+          prevEvents.map((event) =>
+            event.event_id === editEvent.event_id ? response.data.data : event
+          )
+        );
+
+        toast.success("Event updated successfully!");
+        setIsEditDialogOpen(false);
+        setEditEvent(null);
+        setEventImage(null);
+      }
+    } catch (error) {
+      console.error("Error updating event:", error.response?.data || error);
+      toast.error("Failed to update event!");
+    }
+  };
+
   // Function to delete event
   const handleDeleteEvent = async (eventId) => {
     try {
@@ -212,6 +273,8 @@ function AdminEvent() {
       toast.error("Failed to delete event!");
     }
   };
+
+  const today = new Date().toISOString().slice(0, 16); // format: "YYYY-MM-DDTHH:MM"
 
   return (
     <div className="flex min-h-screen bg-background">
@@ -264,18 +327,32 @@ function AdminEvent() {
                 <Label>Start Time</Label>
                 <Input
                   type="datetime-local"
+                  min={currentDateTime}
                   value={newEvent.start_time}
-                  onChange={(e) =>
-                    setNewEvent({ ...newEvent, start_time: e.target.value })
-                  }
+                  onChange={(e) => {
+                    const selectedStart = e.target.value;
+                    setNewEvent((prev) => ({
+                      ...prev,
+                      start_time: selectedStart,
+                      // Auto-correct end_time if it's earlier than new start_time
+                      end_time:
+                        prev.end_time && prev.end_time < selectedStart
+                          ? selectedStart
+                          : prev.end_time,
+                    }));
+                  }}
                 />
 
                 <Label>End Time</Label>
                 <Input
                   type="datetime-local"
+                  min={newEvent.start_time || currentDateTime}
                   value={newEvent.end_time}
                   onChange={(e) =>
-                    setNewEvent({ ...newEvent, end_time: e.target.value })
+                    setNewEvent((prev) => ({
+                      ...prev,
+                      end_time: e.target.value,
+                    }))
                   }
                 />
 
@@ -301,57 +378,155 @@ function AdminEvent() {
         </div>
 
         {/* Events Table */}
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Sr No</TableHead>
-              <TableHead>Image</TableHead>
-              <TableHead>Title</TableHead>
-              <TableHead>Start Time</TableHead>
-              <TableHead>End Time</TableHead>
-              <TableHead>Location</TableHead>
-              <TableHead>Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {events.map((event, index) => (
-              <TableRow key={event.event_id}>
-                <TableCell>{index + 1}</TableCell>
-                <TableCell>
-                  {event.media_url && (
-                    <img
-                      src={event.media_url}
-                      alt="Event"
-                      className="w-16 h-16"
-                    />
-                  )}
-                </TableCell>
-                <TableCell>{event.title}</TableCell>
-                <TableCell>
-                  {new Date(event.start_time).toLocaleString()}
-                </TableCell>
-                <TableCell>
-                  {new Date(event.end_time).toLocaleString()}
-                </TableCell>
-                <TableCell>{event.location}</TableCell>
-                <TableCell>
-                  <Button
-                    onClick={() => handleEditClick(event)}
-                    className="text-blue-500 bg-color-none hover:bg-gray-300"
-                  >
-                    <Pencil />
-                  </Button>{" "}
-                  <Button
-                    onClick={() => handleDeleteEvent(event.event_id)}
-                    className="text-red-500 bg-color-none hover:bg-gray-300"
-                  >
-                    <Trash2 />
-                  </Button>
-                </TableCell>
+        <div className="rounded-sm mt-7 border border-gray-200 bg-gradient-to-br from-gray-50 to-white shadow-lg overflow-hidden">
+          <Table>
+            <TableHeader className="bg-gradient-to-r from-blue-900 to-blue-800">
+              <TableRow>
+                <TableHead className="text-white font-semibold text-[13px] px-6 py-4 uppercase tracking-wide">
+                  Sr No
+                </TableHead>
+                <TableHead className="text-white font-semibold text-[13px] px-6 py-4 uppercase tracking-wide">
+                  Image
+                </TableHead>
+                <TableHead className="text-white font-semibold text-[13px] px-6 py-4 uppercase tracking-wide">
+                  Title
+                </TableHead>
+                <TableHead className="text-white font-semibold text-[13px] px-6 py-4 uppercase tracking-wide">
+                  Start Time
+                </TableHead>
+                <TableHead className="text-white font-semibold text-[13px] px-6 py-4 uppercase tracking-wide">
+                  End Time
+                </TableHead>
+                <TableHead className="text-white font-semibold text-[13px] px-6 py-4 uppercase tracking-wide">
+                  Location
+                </TableHead>
+                <TableHead className="text-white font-semibold text-[13px] px-6 py-4 uppercase tracking-wide">
+                  No. of Attendees
+                </TableHead>
+                <TableHead className="text-white font-semibold text-[13px] px-6 py-4 text-center uppercase tracking-wide">
+                  Actions
+                </TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+
+            <TableBody>
+              {currentEvents.length > 0 ? (
+                currentEvents.map((event, index) => (
+                  <TableRow
+                    key={event.event_id}
+                    className={
+                      index % 2 === 0
+                        ? "bg-white hover:bg-blue-50 transition-all duration-300"
+                        : "bg-gray-50 hover:bg-blue-50 transition-all duration-300"
+                    }
+                  >
+                    <TableCell className="px-6 py-4 text-sm font-medium text-gray-900">
+                      {startIndex + index + 1}
+                    </TableCell>
+                    <TableCell className="px-6 py-4">
+                      {event.media_url && (
+                        <img
+                          src={event.media_url}
+                          alt="Event"
+                          className="w-16 h-16 rounded object-cover shadow"
+                        />
+                      )}
+                    </TableCell>
+                    <TableCell className="px-6 py-4 text-sm text-gray-700">
+                      {event.title}
+                    </TableCell>
+                    <TableCell className="px-6 py-4 text-sm text-gray-600">
+                      {new Date(event.start_time).toLocaleString()}
+                    </TableCell>
+                    <TableCell className="px-6 py-4 text-sm text-gray-600">
+                      {new Date(event.end_time).toLocaleString()}
+                    </TableCell>
+                    <TableCell className="px-6 py-4 text-sm text-gray-700">
+                      {event.location}
+                    </TableCell>
+                    <TableCell className="px-6 py-4 text-sm text-gray-700">
+                      {registrationCounts[event.event_id] ?? "Loading..."}
+                    </TableCell>
+
+                    <TableCell className="px-6 py-4 text-center">
+                      <div className="flex justify-center space-x-3">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="hover:bg-blue-100 p-2 rounded-full transition"
+                          onClick={() => handleEditClick(event)}
+                        >
+                          <Pencil className="h-4 w-4 text-blue-700" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="hover:bg-red-100 p-2 rounded-full transition"
+                          onClick={() => {
+                            const confirmed = window.confirm(
+                              "Are you sure you want to delete this event?"
+                            );
+                            if (confirmed) {
+                              handleDeleteEvent(event.event_id);
+                            }
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4 text-red-600" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell
+                    colSpan={7}
+                    className="text-center py-6 text-sm text-gray-500"
+                  >
+                    No Events Found
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+
+        {/* Pagination */}
+        <div className="flex justify-center items-center mt-6 space-x-2">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={currentPage === 1}
+            onClick={() => handlePageChange(currentPage - 1)}
+          >
+            &larr;
+          </Button>
+
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+            <Button
+              key={page}
+              size="sm"
+              className={
+                currentPage === page
+                  ? "bg-blue-900 text-white"
+                  : "text-blue-500"
+              }
+              variant={currentPage === page ? "default" : "outline"}
+              onClick={() => handlePageChange(page)}
+            >
+              {page}
+            </Button>
+          ))}
+
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={currentPage === totalPages}
+            onClick={() => handlePageChange(currentPage + 1)}
+          >
+            &rarr;
+          </Button>
+        </div>
       </div>
 
       {/* Edit Event Dialog */}
@@ -390,15 +565,26 @@ function AdminEvent() {
             <Label>Start Time</Label>
             <Input
               type="datetime-local"
+              min={currentDateTime} // Current time as minimum for start time
               value={editEvent.start_time}
-              onChange={(e) =>
-                setEditEvent({ ...editEvent, start_time: e.target.value })
-              }
+              onChange={(e) => {
+                const selectedStart = e.target.value;
+                setEditEvent((prev) => ({
+                  ...prev,
+                  start_time: selectedStart,
+                  // Auto-correct end_time if it's earlier than new start_time
+                  end_time:
+                    prev.end_time && prev.end_time < selectedStart
+                      ? selectedStart
+                      : prev.end_time,
+                }));
+              }}
             />
 
             <Label>End Time</Label>
             <Input
               type="datetime-local"
+              min={editEvent.start_time || currentDateTime} // End time can't be before start time
               value={editEvent.end_time}
               onChange={(e) =>
                 setEditEvent({ ...editEvent, end_time: e.target.value })

@@ -36,6 +36,8 @@ function Navbar() {
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user_id");
+    localStorage.removeItem("role");
+    localStorage.removeItem("email");
     navigate("/login");
   };
 
@@ -181,7 +183,8 @@ function Navbar() {
             <li>
               <NavLink
                 to="/feed"
-                className="flex items-center space-x-2 p-3 hover:bg-blue-800 transition-colors font-medium uppercase"  onClick={() => setMenuOpen(!menuOpen)}
+                className="flex items-center space-x-2 p-3 hover:bg-blue-800 transition-colors font-medium uppercase"
+                onClick={() => setMenuOpen(!menuOpen)}
               >
                 <Rss size={20} />
                 <span>FEED</span>
@@ -191,7 +194,8 @@ function Navbar() {
             <li>
               <NavLink
                 to="/alumni-network"
-                className="flex items-center space-x-2 p-3 hover:bg-blue-800 transition-colors font-medium uppercase"  onClick={() => setMenuOpen(!menuOpen)}
+                className="flex items-center space-x-2 p-3 hover:bg-blue-800 transition-colors font-medium uppercase"
+                onClick={() => setMenuOpen(!menuOpen)}
               >
                 <GraduationCap size={20} />
                 <span>
@@ -211,7 +215,8 @@ function Navbar() {
             <li>
               <NavLink
                 to="/events"
-                className="flex items-center space-x-2 p-3 hover:bg-blue-800 transition-colors font-medium uppercase"  onClick={() => setMenuOpen(!menuOpen)}
+                className="flex items-center space-x-2 p-3 hover:bg-blue-800 transition-colors font-medium uppercase"
+                onClick={() => setMenuOpen(!menuOpen)}
               >
                 <CalendarFold size={20} />
                 <span>Events</span>
@@ -221,7 +226,8 @@ function Navbar() {
             <li>
               <NavLink
                 to="/jobs"
-                className="flex items-center space-x-2 p-3 hover:bg-blue-800 transition-colors font-medium uppercase"  onClick={() => setMenuOpen(!menuOpen)}
+                className="flex items-center space-x-2 p-3 hover:bg-blue-800 transition-colors font-medium uppercase"
+                onClick={() => setMenuOpen(!menuOpen)}
               >
                 <BriefcaseBusiness size={20} />
                 <span>Jobs & Opportunities</span>
@@ -231,7 +237,8 @@ function Navbar() {
             <li>
               <NavLink
                 to="#"
-                className="flex items-center space-x-2 p-3 hover:bg-blue-800 transition-colors font-medium uppercase"  onClick={() => setMenuOpen(!menuOpen)}
+                className="flex items-center space-x-2 p-3 hover:bg-blue-800 transition-colors font-medium uppercase"
+                onClick={() => setMenuOpen(!menuOpen)}
               >
                 <HeartHandshake size={20} />
                 <span>

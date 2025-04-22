@@ -3,7 +3,7 @@ import axios from "axios";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Search, MapPin, Calendar } from "lucide-react";
+import { Search, MapPin, Calendar, CalendarDays } from "lucide-react";
 import { Link } from "react-router-dom";
 
 function Event() {
@@ -13,6 +13,38 @@ function Event() {
 
   const token = localStorage.getItem("token");
   const user_id = localStorage.getItem("user_id");
+  const [isVerified, setIsVerified] = useState(null);
+  useEffect(() => {
+    const email = localStorage.getItem("email");
+
+    if (email) {
+      checkUserVerification(email);
+    }
+  }, []);
+
+  const checkUserVerification = async (email) => {
+    try {
+      const response = await axios.get(
+        `https://alumni-backend-drab.vercel.app/api/users/${email}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`, // make sure token is available
+          },
+        }
+      );
+
+      const user = response.data;
+      console.log(user);
+      if (user.data.status === "Approved") {
+        setIsVerified(true);
+      } else {
+        setIsVerified(false);
+      }
+    } catch (err) {
+      console.error("Error checking user verification status:", err);
+      setIsVerified(false);
+    }
+  };
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -45,6 +77,11 @@ function Event() {
         <div className="grid grid-cols-1 gap-6 md:grid-cols-4 mt-24">
           {/* Sidebar */}
           <div className="space-y-6 md:col-span-1">
+            <Button className="bg-blue-900 hover:bg-blue-700">
+              {" "}
+              <CalendarDays className="h-4 w-4" />
+              My Events
+            </Button>
             <div className=" max-w-md mx-auto fixed">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
               <Input
@@ -55,8 +92,16 @@ function Event() {
               />
             </div>
           </div>
+
           {/* Main Content */}
           <div className="md:col-span-3 space-y-6 mt-10 md:mt-0">
+            {isVerified === false && (
+              <div className="bg-red-400 p-2 border border-l-4 border-red-900 ">
+                <p className="text-white text-sm">
+                  Your verification is pending. Please wait for admin approval.
+                </p>
+              </div>
+            )}
             {loading ? (
               <p>Loading events...</p>
             ) : filteredEvents.length === 0 ? (

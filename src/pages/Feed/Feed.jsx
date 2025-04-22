@@ -8,7 +8,6 @@ import {
   CardFooter,
   CardHeader,
 } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { Heart, MessageCircle, Pencil } from "lucide-react";
 import { NavLink } from "react-router-dom";
 
@@ -16,27 +15,64 @@ function Feed() {
   const [posts, setPosts] = useState([]);
   const [users, setUsers] = useState({});
   const [fetching, setFetching] = useState(true);
-  const token = localStorage.getItem("token"); // Retrieve token from localStorage
+  const token = localStorage.getItem("token");
+  const userId = localStorage.getItem("user_id");
 
-  // Fetch Posts
+  // Fetch all posts + like count + like status
   const fetchPosts = async () => {
     setFetching(true);
     try {
-      const response = await axios.get(
+      const postResponse = await axios.get(
         "https://alumni-backend-drab.vercel.app/api/users/posts/all",
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      setPosts(response.data.data);
-    } catch (error) {
-      console.error("Error fetching posts:", error);
+
+      const postsData = postResponse.data.data;
+
+      // Enrich posts with like count & like status
+      const enrichedPosts = await Promise.all(
+        postsData.map(async (post) => {
+          let likeCount = 0;
+          let isLiked = false;
+
+          try {
+            const likeRes = await axios.get(
+              `https://alumni-backend-drab.vercel.app/api/users/postlike/likes-count/${post.post_id}`,
+              {
+                headers: { Authorization: `Bearer ${token}` },
+              }
+            );
+            likeCount = likeRes.data.count || 0;
+          } catch (err) {
+            console.error("Failed to fetch like count", err);
+          }
+
+          try {
+            const likedRes = await axios.get(
+              `https://alumni-backend-drab.vercel.app/api/users/postlike/liked/${userId}/${post.post_id}`,
+              {
+                headers: { Authorization: `Bearer ${token}` },
+              }
+            );
+            isLiked = likedRes.data.liked || false;
+          } catch (err) {
+            console.error("Failed to fetch like status", err);
+          }
+
+          return { ...post, likes: likeCount, isLiked };
+        })
+      );
+
+      setPosts(enrichedPosts);
+    } catch (err) {
+      console.error("Error fetching posts:", err);
     } finally {
       setFetching(false);
     }
   };
 
-  // Fetch Users
   const fetchUsers = async () => {
     try {
       const response = await axios.get(
@@ -45,13 +81,13 @@ function Feed() {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      const usersMap = response.data.data.reduce((acc, user) => {
+      const userMap = response.data.data.reduce((acc, user) => {
         acc[user.user_id] = user;
         return acc;
       }, {});
-      setUsers(usersMap);
-    } catch (error) {
-      console.error("Error fetching users:", error);
+      setUsers(userMap);
+    } catch (err) {
+      console.error("Error fetching users:", err);
     }
   };
 
@@ -60,51 +96,58 @@ function Feed() {
     fetchUsers();
   }, []);
 
-  // Handle Like API Call
-  const handleLike = async (postId) => {
-    const userId = localStorage.getItem("user_id"); // Get user_id from localStorage
-  
-    if (!userId) {
-      console.error("User ID not found. Please log in again.");
-      return;
-    }
-  
-    // Optimistic UI update
-    setPosts((prevPosts) =>
-      prevPosts.map((post) =>
-        post.post_id === postId
-          ? {
-              ...post,
-              likes: post.isLiked ? post.likes - 1 : (post.likes || 0) + 1,
-              isLiked: !post.isLiked,
-            }
-          : post
-      )
-    );
-  
+  const handleLike = async (postId, isLiked) => {
     try {
-      await axios.post(
-        "https://alumni-backend-drab.vercel.app/api/users/postlike/like",
-        { post_id: postId, user_id: userId }, // ✅ Include user_id in the request body
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-    } catch (error) {
-      console.error("Error liking post:", error.response?.data || error.message);
-      // Revert state if request fails
+      // Optimistically update UI
       setPosts((prevPosts) =>
         prevPosts.map((post) =>
           post.post_id === postId
             ? {
                 ...post,
-                likes: post.isLiked ? post.likes + 1 : post.likes - 1,
-                isLiked: !post.isLiked,
+                likes: isLiked ? post.likes - 1 : post.likes + 1,
+                isLiked: !isLiked,
+              }
+            : post
+        )
+      );
+
+      const url = isLiked
+        ? "https://alumni-backend-drab.vercel.app/api/users/postlike/unlike"
+        : "https://alumni-backend-drab.vercel.app/api/users/postlike/like";
+      console.log(postId, userId);
+      const res = await axios.post(
+        url,
+        { post_id: postId, user_id: userId },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      // ✅ Log the response
+      console.log("Like/Unlike Response:", res.data);
+    } catch (err) {
+      console.error(
+        "Error while liking/unliking:",
+        err.response?.data || err.message
+      );
+
+      // Revert optimistic UI update
+      setPosts((prevPosts) =>
+        prevPosts.map((post) =>
+          post.post_id === postId
+            ? {
+                ...post,
+                likes: isLiked ? post.likes + 1 : post.likes - 1,
+                isLiked: isLiked,
               }
             : post
         )
       );
     }
   };
-  
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -114,7 +157,7 @@ function Feed() {
         ) : posts.length > 0 ? (
           <div className="space-y-6">
             {posts.map((post) => {
-              const user = users[post.user_id] || {}; // Get user info based on post's user_id
+              const user = users[post.user_id] || {};
               return (
                 <Card key={post.post_id}>
                   <CardHeader>
@@ -125,8 +168,7 @@ function Feed() {
                           {user.name
                             ? user.name
                                 .split(" ")
-                                .map((word) => word[0])
-                                .slice(0, 2)
+                                .map((w) => w[0])
                                 .join("")
                                 .toUpperCase()
                             : "U"}
@@ -145,13 +187,11 @@ function Feed() {
                   <CardContent className="space-y-4">
                     <p className="text-gray-600">{post.content}</p>
                     {post.media_url && (
-                      <div className="relative w-full overflow-hidden rounded-lg">
-                        <img
-                          src={post.media_url}
-                          alt="Post"
-                          className="max-w-full h-auto rounded-lg"
-                        />
-                      </div>
+                      <img
+                        src={post.media_url}
+                        alt="Post"
+                        className="max-w-full h-auto rounded-lg"
+                      />
                     )}
                   </CardContent>
                   <CardFooter className="flex flex-col">
@@ -159,19 +199,18 @@ function Feed() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleLike(post.post_id)}
+                        onClick={() => handleLike(post.post_id, post.isLiked)}
                         className={post.isLiked ? "text-blue-600" : ""}
-                        aria-label="Like post"
                       >
                         <Heart
-                          className={`h-4 w-4 mr-2 transition-all duration-200 ${
+                          className={`h-4 w-4 mr-2 ${
                             post.isLiked ? "fill-current text-blue-600" : ""
                           }`}
                         />
                         {post.likes || 0}
                       </Button>
-                      <Button variant="ghost" size="sm" aria-label="Comment">
-                        <MessageCircle className="h-4 w-4 mr-2" /> 0
+                      <Button variant="ghost" size="sm">
+                        <MessageCircle className="h-4 w-4 mr-2" />0
                       </Button>
                     </div>
                   </CardFooter>
@@ -183,12 +222,10 @@ function Feed() {
           <p className="text-center text-gray-500">No posts yet.</p>
         )}
 
-        {/* Floating Add Post Button */}
         <div className="fixed bottom-6 right-6">
           <NavLink
             to="/feed-post"
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white shadow-lg px-4 py-2 rounded-full transition duration-200"
-            aria-label="Add Post"
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white shadow-lg px-4 py-2 rounded-full"
           >
             <Pencil className="h-5 w-5" />
             Add Post
