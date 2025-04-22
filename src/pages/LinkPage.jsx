@@ -20,6 +20,7 @@ import UserProfile from "./ProfileManage/UserProfile";
 import Jobs from "./Jobs/Jobs";
 import AdminProtectedRoutes from "@/AdminProtectedRoutes";
 import Unauthorized from "@/Unauthorized";
+import PostJobForm from "./Jobs/PostJobForm";
 const Format = () => {
   return (
     <div>
@@ -39,7 +40,6 @@ const router = createBrowserRouter([
   },
   {
     path: "/admin/home",
-
     element: (
       <AdminProtectedRoutes>
         <Dashboard />
@@ -48,11 +48,20 @@ const router = createBrowserRouter([
   },
   {
     path: "/admin/events",
-    element: <AdminEvent />,
+    element: (
+      <AdminProtectedRoutes>
+        <AdminEvent />
+      </AdminProtectedRoutes>
+    ),
   },
   {
     path: "/admin/alumni",
-    element: <AdminAlumni />,
+    element: (
+      <AdminProtectedRoutes>
+        {" "}
+        <AdminAlumni />
+      </AdminProtectedRoutes>
+    ),
   },
   {
     path: "/",
@@ -87,6 +96,14 @@ const router = createBrowserRouter([
         element: (
           <ProtectedRoutes>
             <FeedPost />
+          </ProtectedRoutes>
+        ),
+      },
+      {
+        path: "/post-jobs",
+        element: (
+          <ProtectedRoutes>
+            <PostJobForm />
           </ProtectedRoutes>
         ),
       },

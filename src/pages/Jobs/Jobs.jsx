@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Briefcase, Filter } from "lucide-react";
+import { NavLink } from "react-router-dom";
 const jobData = [
   {
     id: 1,
@@ -91,9 +92,9 @@ function Jobs() {
             <h2 className="text-2xl font-bold">Opportunities</h2>
             <div className="space-x-2">
               <Button variant="outline">Preferences</Button>
-              <Button className="bg-blue-600 text-white">
+              <NavLink to="/post-jobs"  className="bg-blue-600 text-white">
                 + Post an Opportunity
-              </Button>
+              </NavLink>
             </div>
           </div>
 
