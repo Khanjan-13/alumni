@@ -5,6 +5,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import API_URL from '../../../config';
 
 function ProfileWork() {
   const [formData, setFormData] = useState({
@@ -29,7 +30,7 @@ function ProfileWork() {
 
       try {
         const response = await axios.get(
-          `https://alumni-backend-drab.vercel.app/api/users/experience/${userId}`,
+          `${API_URL}/api/users/experience/${userId}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -70,7 +71,7 @@ function ProfileWork() {
 
     try {
       const response = await axios.post(
-        "https://alumni-backend-drab.vercel.app/api/users/experience",
+        `${API_URL}/api/users/experience`,
         { ...formData, user_id: userId },
         {
           headers: {

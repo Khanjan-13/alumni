@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import toast, { Toaster } from "react-hot-toast";
+import API_URL from '../../../config';
 
 export default function Profile() {
   const [formData, setFormData] = useState({
@@ -80,7 +81,7 @@ export default function Profile() {
           return;
         }
         const response = await axios.get(
-          `https://alumni-backend-drab.vercel.app/api/users/profile/${userId}`,
+          `${API_URL}/api/users/profile/${userId}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -161,28 +162,31 @@ export default function Profile() {
       if (isProfileExists && profileId) {
         // Update existing profile
         response = await axios.put(
-          `https://alumni-backend-drab.vercel.app/api/users/profile/${profileId}`,
+          `${API_URL}/api/users/profile/${profileId}`,
           formDataToSend,
-          { 
-            headers: { 
+          {
+            headers: {
               Authorization: `Bearer ${token}`,
-              'Content-Type': 'multipart/form-data',
+              "Content-Type": "multipart/form-data",
             },
             validateStatus: function (status) {
               return status >= 200 && status < 500; // Accept status codes between 200 and 499
-            }
+            },
           }
         );
-        
+
         if (response.status === 400) {
-          throw new Error(response.data?.message || 'Bad Request - Please check your input data');
+          throw new Error(
+            response.data?.message ||
+              "Bad Request - Please check your input data"
+          );
         }
-        
-        console.log('Update Response:', response);
+
+        console.log("Update Response:", response);
       } else {
         // Create new profile
         response = await axios.post(
-          "https://alumni-backend-drab.vercel.app/api/users/profile",
+          `${API_URL}/api/users/profile`,
           formDataToSend,
           { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -210,8 +214,8 @@ export default function Profile() {
 
   return (
     <div className="mx-auto">
-            <Toaster position="top-right" />
-      
+      <Toaster position="top-right" />
+
       <Card className="rounded-none">
         <CardHeader>
           <CardTitle>Update Profile</CardTitle>
@@ -308,6 +312,13 @@ export default function Profile() {
                 onChange={inputHandler}
                 className="w-full p-2 border rounded-lg"
                 required
+                max={
+                  new Date(
+                    new Date().setFullYear(new Date().getFullYear() - 18)
+                  )
+                    .toISOString()
+                    .split("T")[0]
+                } // Must be at least 18 years old
               />
             </div>
 

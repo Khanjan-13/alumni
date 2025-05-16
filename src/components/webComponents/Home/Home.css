@@ -1,0 +1,24 @@
+.swiper-button-prev,
+.swiper-button-next {
+  color: #1d4ed8; /* Tailwind blue-700 */
+  background-color: white;
+  border-radius: 9999px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  padding: 10px;
+  width: 40px;
+  height: 40px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.swiper-button-prev:hover,
+.swiper-button-next:hover {
+  background-color: #1e40af; /* Tailwind blue-800 */
+  color: white;
+}
+
+/* Optional: Smaller icons */
+.swiper-button-prev::after,
+.swiper-button-next::after {
+  font-size: 16px;
+}

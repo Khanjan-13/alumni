@@ -9,6 +9,8 @@ import {
   Pencil,
   Trash
 } from "lucide-react";
+import API_URL from '../../../config';
+
 function ProfileEducation() {
   const [educationList, setEducationList] = useState([]);
   const [userId, setUserId] = useState(null);
@@ -41,7 +43,7 @@ function ProfileEducation() {
       }
 
       const response = await axios.get(
-        `https://alumni-backend-drab.vercel.app/api/users/education/${userId}`,
+        `${API_URL}/api/users/education/${userId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
@@ -86,7 +88,7 @@ function ProfileEducation() {
       }
 
       const response = await axios.delete(
-        `https://alumni-backend-drab.vercel.app/api/users/education/${educationId}`,
+        `${API_URL}/api/users/education/${educationId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
@@ -134,7 +136,7 @@ function ProfileEducation() {
       let response;
       if (editingEducationId) {
         response = await axios.put(
-          `https://alumni-backend-drab.vercel.app/api/users/education/${editingEducationId}`,
+          `${API_URL}/api/users/education/${editingEducationId}`,
           { user_id: userId, ...formData },
           {
             headers: {
@@ -144,7 +146,7 @@ function ProfileEducation() {
         );
       } else {
         response = await axios.post(
-          "https://alumni-backend-drab.vercel.app/api/users/education",
+          `${API_URL}/api/users/education`,
           { user_id: userId, ...formData },
           {
             headers: {

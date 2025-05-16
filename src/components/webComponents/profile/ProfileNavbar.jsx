@@ -4,6 +4,7 @@ import PersonalInfo from "@/components/webComponents/profile/ProfileDetails";
 import ProfileSkill from "./ProfileSkill";
 import ProfileWork from "./ProfileWork";
 import ProfileEducation from "./ProfileEducation";
+
 function ProfileNavbar() {
   const [activeSection, setActiveSection] = useState("Profile Details");
 

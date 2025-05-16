@@ -2,6 +2,7 @@ import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { MapPin, Calendar, Clock, Info } from "lucide-react";
+import API_URL from "../../config";
 
 const EventDetail = () => {
   const { id } = useParams(); // event_id from the URL
@@ -22,14 +23,11 @@ const EventDetail = () => {
 
   const checkUserVerification = async (email) => {
     try {
-      const response = await axios.get(
-        `https://alumni-backend-drab.vercel.app/api/users/${email}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`, // make sure token is available
-          },
-        }
-      );
+      const response = await axios.get(`${API_URL}/api/users/${email}`, {
+        headers: {
+          Authorization: `Bearer ${token}`, // make sure token is available
+        },
+      });
 
       const user = response.data;
       console.log(user);
@@ -46,14 +44,11 @@ const EventDetail = () => {
   useEffect(() => {
     const fetchEvent = async () => {
       try {
-        const response = await axios.get(
-          `https://alumni-backend-drab.vercel.app/api/users/events/${id}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        const response = await axios.get(`${API_URL}/api/users/events/${id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
         if (response.data) setEvent(response.data);
       } catch (error) {
         console.error("Error fetching event:", error);
@@ -63,7 +58,7 @@ const EventDetail = () => {
     const checkRegistration = async () => {
       try {
         const response = await axios.get(
-          `https://alumni-backend-drab.vercel.app/api/users/events/${id}/registrations`,
+          `${API_URL}/api/users/events/${id}/registrations`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -109,7 +104,7 @@ const EventDetail = () => {
 
     try {
       const response = await axios.post(
-        `https://alumni-backend-drab.vercel.app/api/users/events/${id}/register`,
+        `${API_URL}/api/users/events/${id}/register`,
         {
           event_id: id,
           user_id,
@@ -164,11 +159,11 @@ const EventDetail = () => {
             {event.data.location}
           </p>
 
-          <p className="flex items-center gap-2">
-            <Info className="text-blue-600 w-5 h-5" />
-            <span className="font-semibold text-gray-900">
-              Description:
+          <p className="flex items-start gap-2">
+            <span className="w-5 h-5 flex-shrink-0 items-center text-blue-600">
+              <Info className="w-5 h-5" />
             </span>{" "}
+            <span className="font-semibold text-gray-900">Description:</span>{" "}
             {event.data.description}
           </p>
 

@@ -12,6 +12,7 @@ import {
   EllipsisVertical,
   Menu,
   X,
+  Home,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -23,6 +24,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import axios from "axios";
 import { toast } from "react-hot-toast";
+import API_URL from "../../../config";
 
 function Navbar() {
   const navigate = useNavigate();
@@ -38,7 +40,7 @@ function Navbar() {
     localStorage.removeItem("user_id");
     localStorage.removeItem("role");
     localStorage.removeItem("email");
-    navigate("/login");
+    navigate("/");
   };
 
   // Fetch user profile data
@@ -55,7 +57,7 @@ function Navbar() {
         }
 
         const response = await axios.get(
-          `https://alumni-backend-drab.vercel.app/api/users/profile/${userId}`,
+          `${API_URL}/api/users/profile/${userId}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -96,28 +98,24 @@ function Navbar() {
                     <li>
                       <span className="flex items-center gap-2 font-semibold">
                         <Avatar>
-                          <AvatarImage
-                            src="{image}"
-                            className="rounded-full object-cover"
-                          />
-                          {image && (
-                            <img
+                          {image ? (
+                            <AvatarImage
                               src={image}
                               alt="Profile"
                               className="rounded-full object-cover"
                             />
+                          ) : (
+                            <AvatarFallback>
+                              {userName
+                                ?.split(" ")
+                                .map((word) => word.charAt(0))
+                                .slice(0, 2)
+                                .join("")
+                                .toUpperCase()}
+                            </AvatarFallback>
                           )}
-
-                          <AvatarFallback>
-                            {" "}
-                            {userName
-                              ?.split(" ")
-                              .map((word) => word.charAt(0))
-                              .slice(0, 2)
-                              .join("")
-                              .toUpperCase()}
-                          </AvatarFallback>
                         </Avatar>
+
                         <span className="hidden md:flex">
                           Hello! {userName}
                         </span>
@@ -174,12 +172,25 @@ function Navbar() {
 
       {/* Secondary Navbar */}
       <nav
-        className={`bg-blue-600 text-white shadow-md mt-16 fixed w-full  z-40 ${
+        className={`bg-blue-900 text-white shadow-md mt-16 fixed w-full  z-40 ${
           menuOpen ? "block " : "hidden"
         } md:flex pt-10 md:pt-0`}
       >
         <div className="container mx-auto px-4">
           <ul className="flex flex-col md:flex-row justify-center items-center gap-3">
+            <li className="hidden md:block">|</li>
+
+            <li>
+              <NavLink
+                to="/"
+                className="flex items-center space-x-2 p-3 hover:bg-blue-800 transition-colors font-medium uppercase"
+                onClick={() => setMenuOpen(!menuOpen)}
+              >
+                <Home size={20} />
+                <span>Home</span>
+              </NavLink>
+            </li>
+            <li className="hidden md:block">|</li>
             <li>
               <NavLink
                 to="/feed"
@@ -234,30 +245,6 @@ function Navbar() {
               </NavLink>
             </li>
             <li className="hidden md:block">|</li>
-            <li>
-              <NavLink
-                to="#"
-                className="flex items-center space-x-2 p-3 hover:bg-blue-800 transition-colors font-medium uppercase"
-                onClick={() => setMenuOpen(!menuOpen)}
-              >
-                <HeartHandshake size={20} />
-                <span>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger className="uppercase focus:outline-none flex items-center justify-center gap-1">
-                      Alumni Support <ChevronDown size={17} />
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent className="uppercase text-blue-600 w-52 font-medium">
-                      <DropdownMenuItem className="p-3">
-                        Find your documents
-                      </DropdownMenuItem>
-                      <DropdownMenuItem className="p-3">
-                        Donations
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </span>
-              </NavLink>
-            </li>
           </ul>
         </div>
       </nav>

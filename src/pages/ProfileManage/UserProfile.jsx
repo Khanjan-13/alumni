@@ -1,14 +1,15 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Pencil, PlusCircle } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { NavLink } from "react-router-dom";
 import { useParams } from "react-router-dom";
 import bvm from "@/assets/bvm.jpg";
+import API_URL from "../../config";
 
 function UserProfile() {
+ 
+  
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -23,7 +24,7 @@ function UserProfile() {
       setLoading(true);
       try {
         const response = await axios.get(
-          `https://alumni-backend-drab.vercel.app/api/users/profile/all-data/${user_id}`
+          `${API_URL}/api/users/profile/all-data/${user_id}`
         );
         console.log(response);
         if (response.status === 200 && response.data?.data) {
@@ -53,7 +54,8 @@ function UserProfile() {
     <>
       <section
         className="relative h-[500px] bg-cover bg-center"
-        style={{ backgroundImage: `url(${bvm})` }}>
+        style={{ backgroundImage: `url(${bvm})` }}
+      >
         <div className="absolute inset-0 bg-blue-700 bg-opacity-50"></div>
         <div className="relative z-10 flex flex-col items-center justify-center h-full text-center text-white">
           <h1 className="text-5xl font-bold mt-2">Profile</h1>
@@ -64,14 +66,17 @@ function UserProfile() {
           {/* Profile Section */}
           <Card className="p-8 flex flex-col items-center md:items-start gap-6  bg-white rounded-sm">
             <div className="relative">
-              <div className="w-32 h-32 flex items-center justify-center text-3xl font-bold rounded-full">
+              <div className="w-32 h-32 rounded-full overflow-hidden border-2 border-gray-200 shadow">
                 <img
-                  src={profile.photo}
-                  alt="Profile"
-                  className="w-32 h-32 rounded-full object-cover"
+                  src={profile.photo || "/profile.jpg"}
+                  alt={profile.name || "Profile"}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = "/profile.jpg";
+                  }}
                 />
               </div>
-             
             </div>
 
             {/* Profile Information */}
@@ -92,53 +97,78 @@ function UserProfile() {
               </p>
               <p className="text-gray-500">{profile.institution_name}</p>
               <p className="text-blue-400">{profile.bio}</p>
-
-             
             </div>
           </Card>
 
           {/* Contact Information */}
-          <Card className=" p-4 rounded-sm">
+          <Card className="p-4 rounded-sm">
             <div className="flex justify-between">
-              <h3 className="font-semibold">Contact Information</h3>
-             
+              <h3 className="text-lg font-semibold text-gray-900 ">
+                Contact Information
+              </h3>
             </div>
+
             <CardContent className="space-y-4">
-              <div>
-                <h4 className="text-lg font-semibold text-gray-900">Email</h4>
-                <p className="text-gray-700">{profile.user?.email}</p>
-                <p className="text-gray-700">{profile.alternate_email}</p>
-              </div>
+              {/* Email Section */}
+              {(profile.user?.email || profile.alternate_email) && (
+                <div>
+                  <h4 className=" font-semibold text-gray-900">Email</h4>
+                  {profile.user?.email && (
+                    <p className="text-gray-700">{profile.user.email}</p>
+                  )}
+                  {profile.alternate_email && (
+                    <p className="text-gray-700">{profile.alternate_email}</p>
+                  )}
+                </div>
+              )}
 
-              <div>
-                <h4 className="text-lg font-semibold text-gray-900">Contact</h4>
-                <p className="text-gray-700">
-                  {profile.contact_number || "No contact available"}
-                </p>
-                <p className="text-blue-500 underline">
-                  {profile.profile_link}
-                </p>
-              </div>
+              {/* Contact Section */}
+              {(profile.contact_number || profile.profile_link) && (
+                <div>
+                  <h4 className=" font-semibold text-gray-900">Contact</h4>
+                  {profile.contact_number && (
+                    <p className="text-gray-700">{profile.contact_number}</p>
+                  )}
+                  {profile.profile_link && (
+                    <p className="text-blue-500 underline">
+                      {profile.profile_link}
+                    </p>
+                  )}
+                </div>
+              )}
 
-              <div>
-                <h4 className="text-lg font-semibold text-gray-900">Address</h4>
-                <p className="text-gray-700">
-                  {profile.current_address || "No address provided"}
-                </p>
-                <p className="text-gray-700">
-                  {profile.taluka + ","} {profile.district + ","}{" "}
-                  {profile.state + ","} {profile.country + ","} -{" "}
-                  {profile.postal_code}
-                </p>
-              </div>
+              {/* Address Section */}
+              {(profile.current_address ||
+                profile.taluka ||
+                profile.district ||
+                profile.state ||
+                profile.country ||
+                profile.postal_code) && (
+                <div>
+                  <h4 className=" font-semibold text-gray-900">Address</h4>
+                  {profile.current_address && (
+                    <p className="text-gray-700">{profile.current_address}</p>
+                  )}
+                  <p className="text-gray-700">
+                    {[
+                      profile.taluka,
+                      profile.district,
+                      profile.state,
+                      profile.country,
+                    ]
+                      .filter(Boolean)
+                      .join(", ")}
+                    {profile.postal_code && ` - ${profile.postal_code}`}
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
 
           {/* Education */}
           <Card className="mt-4 p-6 rounded-sm">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-bold text-gray-900">Education</h3>
-              
+              <h3 className="text-lg font-semibold text-gray-900">Education</h3>
             </div>
             <CardContent className="space-y-4">
               <div className="">
@@ -182,7 +212,6 @@ function UserProfile() {
               <h3 className="font-semibold text-lg text-gray-900">
                 Work Experience
               </h3>
-             
             </div>
             <CardContent>
               {Array.isArray(profile?.experience) &&
@@ -217,18 +246,10 @@ function UserProfile() {
             </CardContent>
           </Card>
 
-          {/* Membership */}
-          <Card className="mt-4 p-4 rounded-sm">
-            <h3 className="font-semibold">Membership</h3>
-            <CardContent>
-              <p className="text-blue-500">{profile.membership || "N/A"}</p>
-            </CardContent>
-          </Card>
-
+       
           <Card className="mt-4 p-4 rounded-sm">
             <div className="flex justify-between items-center mb-2">
               <h3 className="font-semibold">Skills</h3>
-             
             </div>
             <CardContent>
               {Array.isArray(profile?.skills) && profile.skills.length > 0 ? (

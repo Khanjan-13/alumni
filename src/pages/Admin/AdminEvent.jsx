@@ -25,6 +25,8 @@ import {
 import { Label } from "@/components/ui/label";
 import toast, { Toaster } from "react-hot-toast";
 import AdminNavbar from "./AdminNavbar";
+import API_URL from "../../config";
+
 function AdminEvent() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -59,7 +61,7 @@ function AdminEvent() {
   const checkRegistration = async (event_id) => {
     try {
       const response = await axios.get(
-        `https://alumni-backend-drab.vercel.app/api/users/events/${event_id}/registration-count`,
+        `${API_URL}/api/users/events/${event_id}/registration-count`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -104,12 +106,9 @@ function AdminEvent() {
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        const response = await axios.get(
-          "https://alumni-backend-drab.vercel.app/api/users/events/all",
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
+        const response = await axios.get(`${API_URL}/api/users/events/all`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         console.log("Fetched Events:", response.data);
         setEvents(response.data.data || []);
       } catch (error) {
@@ -151,7 +150,7 @@ function AdminEvent() {
 
     try {
       const response = await axios.post(
-        "https://alumni-backend-drab.vercel.app/api/users/events",
+        `${API_URL}/api/users/events`,
         formData,
         {
           headers: {
@@ -224,7 +223,7 @@ function AdminEvent() {
 
     try {
       const response = await axios.put(
-        `https://alumni-backend-drab.vercel.app/api/users/events/${editEvent.event_id}`,
+        `${API_URL}/api/users/events/${editEvent.event_id}`,
         formData,
         {
           headers: {
@@ -257,12 +256,9 @@ function AdminEvent() {
   // Function to delete event
   const handleDeleteEvent = async (eventId) => {
     try {
-      await axios.delete(
-        `https://alumni-backend-drab.vercel.app/api/users/events/${eventId}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      await axios.delete(`${API_URL}/api/users/events/${eventId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       setEvents((prevEvents) =>
         prevEvents.filter((event) => event.event_id !== eventId)
@@ -275,6 +271,13 @@ function AdminEvent() {
   };
 
   const today = new Date().toISOString().slice(0, 16); // format: "YYYY-MM-DDTHH:MM"
+  const formatForDateTimeInput = (dateString) => {
+    const date = new Date(dateString);
+    const pad = (n) => String(n).padStart(2, "0");
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(
+      date.getDate()
+    )}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+  };
 
   return (
     <div className="flex min-h-screen bg-background">
@@ -436,10 +439,24 @@ function AdminEvent() {
                       {event.title}
                     </TableCell>
                     <TableCell className="px-6 py-4 text-sm text-gray-600">
-                      {new Date(event.start_time).toLocaleString()}
+                      {new Date(event.start_time).toLocaleString("en-GB", {
+                        year: "numeric",
+                        month: "2-digit",
+                        day: "2-digit",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        hour12: false,
+                      })}
                     </TableCell>
                     <TableCell className="px-6 py-4 text-sm text-gray-600">
-                      {new Date(event.end_time).toLocaleString()}
+                      {new Date(event.end_time).toLocaleString("en-GB", {
+                        year: "numeric",
+                        month: "2-digit",
+                        day: "2-digit",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        hour12: false,
+                      })}
                     </TableCell>
                     <TableCell className="px-6 py-4 text-sm text-gray-700">
                       {event.location}
@@ -565,14 +582,13 @@ function AdminEvent() {
             <Label>Start Time</Label>
             <Input
               type="datetime-local"
-              min={currentDateTime} // Current time as minimum for start time
-              value={editEvent.start_time}
+              min={currentDateTime}
+              value={formatForDateTimeInput(editEvent.start_time)}
               onChange={(e) => {
                 const selectedStart = e.target.value;
                 setEditEvent((prev) => ({
                   ...prev,
                   start_time: selectedStart,
-                  // Auto-correct end_time if it's earlier than new start_time
                   end_time:
                     prev.end_time && prev.end_time < selectedStart
                       ? selectedStart
@@ -585,7 +601,7 @@ function AdminEvent() {
             <Input
               type="datetime-local"
               min={editEvent.start_time || currentDateTime} // End time can't be before start time
-              value={editEvent.end_time}
+              value={formatForDateTimeInput(editEvent.end_time)}
               onChange={(e) =>
                 setEditEvent({ ...editEvent, end_time: e.target.value })
               }

@@ -71,21 +71,6 @@ function AdminNavbar() {
               </NavLink>
             </li>
 
-            <li>
-              <NavLink
-                to="/admin/alumni"
-                className={({ isActive }) =>
-                  `flex items-center px-3 py-2 rounded-md w-full text-left transition ${
-                    isActive
-                      ? "bg-blue-100 text-blue-600 font-bold"
-                      : "text-gray-950 hover:bg-gray-100"
-                  }`
-                }
-              >
-                <Users className="h-5 w-5 mr-2" />
-                {isSidebarOpen && <span>Manage Users</span>}
-              </NavLink>
-            </li>
 
             {/* Manage Contents Dropdown */}
             <li>
@@ -93,10 +78,10 @@ function AdminNavbar() {
                 onClick={() => toggleDropdown("contents")}
                 className="flex items-center px-3 py-2 rounded-md w-full text-left hover:bg-gray-100 transition text-gray-950"
               >
-                <FileText className="h-5 w-5 mr-2" />
+                <Users className="h-5 w-5 mr-2" />
                 {isSidebarOpen && (
                   <>
-                    <span className="flex-1">Manage Contents</span>
+                    <span className="flex-1">Manage Users</span>
                     {openDropdowns.contents ? (
                       <ChevronUp className="h-4 w-4" />
                     ) : (
@@ -109,33 +94,51 @@ function AdminNavbar() {
                 <ul className="ml-8 space-y-1 mt-1">
                   <li>
                     <NavLink
-                      to="/admin/posts"
-                      className="block px-2 py-1 text-sm text-gray-700 hover:text-blue-600"
+                      to="/admin/alumni"
+                      className={({ isActive }) =>
+                        `flex items-center px-3 py-2 rounded-md w-full text-left transition ${
+                          isActive
+                            ? "bg-blue-100 text-blue-600 font-bold"
+                            : "text-gray-950 hover:bg-gray-100"
+                        }`
+                      }
                     >
-                      Posts
+                      All Users
                     </NavLink>
                   </li>
                   <li>
                     <NavLink
-                      to="/admin/newsletters"
-                      className="block px-2 py-1 text-sm text-gray-700 hover:text-blue-600"
+                      to="/admin/pending-alumni"
+                      className={({ isActive }) =>
+                        `flex items-center px-3 py-2 rounded-md w-full text-left transition ${
+                          isActive
+                            ? "bg-blue-100 text-blue-600 font-bold"
+                            : "text-gray-950 hover:bg-gray-100"
+                        }`
+                      }
                     >
-                      Newsletters
+                      Pending Auth Users
                     </NavLink>
                   </li>
                   <li>
                     <NavLink
-                      to="/admin/messages"
-                      className="block px-2 py-1 text-sm text-gray-700 hover:text-blue-600"
+                      to="/admin/rejected-alumni"
+                      className={({ isActive }) =>
+                        `flex items-center px-3 py-2 rounded-md w-full text-left transition ${
+                          isActive
+                            ? "bg-blue-100 text-blue-600 font-bold"
+                            : "text-gray-950 hover:bg-gray-100"
+                        }`
+                      }
                     >
-                      Messages
+                      Rejected Users
                     </NavLink>
                   </li>
                 </ul>
               )}
             </li>
 
-            <li>
+            {/* <li>
               <NavLink
                 to="/admin/memberships"
                 className={({ isActive }) =>
@@ -149,7 +152,7 @@ function AdminNavbar() {
                 <Mail className="h-5 w-5 mr-2" />
                 {isSidebarOpen && <span>Memberships</span>}
               </NavLink>
-            </li>
+            </li> */}
 
             <li>
               <NavLink
@@ -189,7 +192,7 @@ function AdminNavbar() {
                 <ul className="ml-8 space-y-1 mt-1">
                   <li>
                     <NavLink
-                      to="/admin/jobs/posted"
+                      to="/admin/jobs"
                       className="block px-2 py-1 text-sm text-gray-700 hover:text-blue-600"
                     >
                       Posted Jobs
@@ -197,10 +200,10 @@ function AdminNavbar() {
                   </li>
                   <li>
                     <NavLink
-                      to="/admin/jobs/applicants"
+                      to="/admin/rejected-jobs"
                       className="block px-2 py-1 text-sm text-gray-700 hover:text-blue-600"
                     >
-                      Applicants
+                      Rejected Jobs
                     </NavLink>
                   </li>
                 </ul>

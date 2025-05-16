@@ -12,6 +12,7 @@ import { Send, ImageIcon, Trash } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
+import API_URL from "../../config";
 
 function FeedPost() {
   const [newPost, setNewPost] = useState("");
@@ -19,16 +20,52 @@ function FeedPost() {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(false);
+  const [userName, setUserName] = useState("");
 
   const token = localStorage.getItem("token");
   const user_id = localStorage.getItem("user_id");
+  useEffect(() => {
+    const fetchProfileData = async () => {
+      try {
+        if (!token) {
+          toast.error("Authentication token is missing. Please log in again.");
+          return;
+        }
+        if (!user_id) {
+          toast.error("User ID is missing. Please log in again.");
+          return;
+        }
+
+        const response = await axios.get(
+          `${API_URL}/api/users/profile/${user_id}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+
+        if (response.status === 200) {
+          setUserName(response.data.data.profileData?.name || "User");
+          setImage(response.data.data.profileData?.photo);
+        } else {
+          toast.error("Failed to load profile data.");
+        }
+      } catch (error) {
+        console.error("Error fetching profile data:", error);
+        toast.error(
+          error.response?.data?.message || "Error loading profile data."
+        );
+      }
+    };
+
+    fetchProfileData();
+  }, [token, user_id]); // Runs only when token or userId changes
 
   // Fetch user posts
   const fetchUserPosts = async () => {
     setFetching(true);
     try {
       const response = await axios.get(
-        `https://alumni-backend-drab.vercel.app/api/users/posts/user/${user_id}`,
+        `${API_URL}/api/users/posts/user/${user_id}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -69,7 +106,7 @@ function FeedPost() {
       if (image) formData.append("media", image);
 
       const response = await axios.post(
-        "https://alumni-backend-drab.vercel.app/api/users/posts",
+        `${API_URL}/api/users/posts`,
         formData,
         {
           headers: {
@@ -97,6 +134,31 @@ function FeedPost() {
       setLoading(false);
     }
   };
+
+ const handleDelete = async (post_id) => {
+  const confirmDelete = window.confirm(
+    "Are you sure you want to delete this post?"
+  );
+  if (!confirmDelete) return;
+
+  try {
+    const token = localStorage.getItem("token");
+    await axios.delete(`${API_URL}/api/users/posts/${post_id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    // Update state to remove the deleted post
+    setPosts((prevPosts) => prevPosts.filter((post) => post.post_id !== post_id));
+
+    alert("Post deleted successfully!");
+  } catch (error) {
+    console.error("Error deleting post:", error);
+    alert("Failed to delete the post. Please try again.");
+  }
+};
+
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 lg:p-8">
@@ -139,8 +201,22 @@ function FeedPost() {
             <CardContent className="pt-6">
               <div className="flex gap-4">
                 <Avatar className="h-10 w-10">
-                  <AvatarImage src="/placeholder.svg" />
-                  <AvatarFallback>CU</AvatarFallback>
+                  {image ? (
+                    <AvatarImage
+                      src={image}
+                      alt="Profile"
+                      className="rounded-full object-cover"
+                    />
+                  ) : (
+                    <AvatarFallback>
+                      {userName
+                        ?.split(" ")
+                        .map((word) => word.charAt(0))
+                        .slice(0, 2)
+                        .join("")
+                        .toUpperCase()}
+                    </AvatarFallback>
+                  )}
                 </Avatar>
                 <div className="flex-1 space-y-4">
                   <Textarea
@@ -156,10 +232,10 @@ function FeedPost() {
                     onChange={handleImageChange}
                   />
                   <div className="flex justify-between items-center">
-                    <Button variant="outline" size="sm">
+                    {/* <Button variant="outline" size="sm">
                       <ImageIcon className="h-4 w-4 mr-2" />
                       Add Image
-                    </Button>
+                    </Button> */}
                     <Button
                       onClick={handlePost}
                       disabled={loading}
@@ -191,12 +267,12 @@ function FeedPost() {
                 .map((post) => (
                   <Card key={post.post_id} className="mb-4">
                     <CardHeader className="flex items-center gap-3">
-                      <Avatar className="h-10 w-10">
+                      {/* <Avatar className="h-10 w-10">
                         <AvatarImage src="/placeholder.svg" />
                         <AvatarFallback>CU</AvatarFallback>
-                      </Avatar>
+                      </Avatar> */}
                       <div>
-                        <h3 className="font-semibold">User {user_id}</h3>
+                        {/* <h3 className="font-semibold">User {user_id}</h3> */}
                         <p className="text-sm text-gray-500">
                           {new Date(post.created_at).toLocaleString()}
                         </p>
@@ -213,7 +289,11 @@ function FeedPost() {
                       )}
                     </CardContent>
                     <CardFooter>
-                      <Button variant="destructive" size="sm">
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => handleDelete(post.post_id)}
+                      >
                         <Trash className="h-4 w-4 mr-2" />
                         Delete
                       </Button>

@@ -16,6 +16,8 @@ import {
   Pencil,
   Trash
 } from "lucide-react";
+import API_URL from '../../../config';
+
 function ProfileSkill() {
   const [skills, setSkills] = useState([]);
   const [userId, setUserId] = useState(null);
@@ -46,7 +48,7 @@ function ProfileSkill() {
       }
 
       const response = await axios.get(
-        `https://alumni-backend-drab.vercel.app/api/users/skills/${userId}`,
+        `${API_URL}/api/users/skills/${userId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
@@ -96,7 +98,7 @@ function ProfileSkill() {
       if (editingSkillId) {
         // Update existing skill
         const response = await axios.put(
-          `https://alumni-backend-drab.vercel.app/api/users/skills/${editingSkillId}`,
+          `${API_URL}/api/users/skills/${editingSkillId}`,
           { skill_name: formData.skill_name, proficiency_level: formData.proficiency_level },
           { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -117,7 +119,7 @@ function ProfileSkill() {
       } else {
         // Add new skill
         const response = await axios.post(
-          "https://alumni-backend-drab.vercel.app/api/users/skills",
+          `${API_URL}/api/users/skills`,
           { user_id: userId, skill_name: formData.skill_name, proficiency_level: formData.proficiency_level },
           { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -146,7 +148,7 @@ function ProfileSkill() {
 
     try {
       const response = await axios.delete(
-        `https://alumni-backend-drab.vercel.app/api/users/skills/${skillId}`,
+        `${API_URL}/api/users/skills/${skillId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 

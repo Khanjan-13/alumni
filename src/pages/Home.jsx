@@ -1,5 +1,11 @@
-import React from "react";
-import { Calendar, GraduationCap, Newspaper, Users } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import {
+  Calendar,
+  GraduationCap,
+  MapPin,
+  Newspaper,
+  Users,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -8,135 +14,202 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Link } from "react-router-dom";
+
 import { NavLink } from "react-router-dom";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Navigation, Pagination, Autoplay } from "swiper/modules";
+import "swiper/css";
+import "swiper/css/navigation";
+import "swiper/css/pagination";
 import Footer from "@/components/webComponents/Essentials/Footer";
+import NotableAlumni from "@/components/webComponents/Home/NotableAlumni";
+import IdentityVerificationPopup from "@/components/webComponents/Home/IdentityVerificationPopup";
+import axios from "axios";
+import API_URL from "../config"; // Make sure this exports your API base URL
+
+const images = ["/bvm.jpg", "/1.jpg", "/3.jpg", "/4.jpg"];
 function Home() {
+  const [loading, setLoading] = useState(true);
+  const [events, setEvents] = useState([]);
+
+  const token = localStorage.getItem("token");
+  const [showPopup, setShowPopup] = useState(false);
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        const response = await axios.get(`${API_URL}/api/users/events/all`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setEvents(response.data.data); // Assuming API response contains { data: [...] }
+      } catch (error) {
+        console.error("Error fetching events:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchEvents();
+  }, [token]);
+
+  useEffect(() => {
+    const fetchUserAndCheckIdentityFields = async () => {
+      const email = localStorage.getItem("email");
+      const token = localStorage.getItem("token");
+
+      if (email && token) {
+        try {
+          const response = await axios.get(`${API_URL}/api/users/${email}`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+
+          const user = response.data?.data;
+
+          const isAnyFieldMissing =
+            !user?.college_proof ||
+            !user?.college_id_or_passing_year ||
+            !user?.college_proof_public_id;
+
+          console.log("Show popup:", isAnyFieldMissing);
+
+          setShowPopup(isAnyFieldMissing); // ✅ true if any field is missing
+        } catch (error) {
+          console.error("Failed to fetch user data:", error);
+          // Optional fallback: show popup on fetch error
+          // setShowPopup(true);
+        }
+      }
+    };
+
+    fetchUserAndCheckIdentityFields();
+  }, []);
+
   return (
     <>
-      <div className="min-h-screen bg-gray-50 p-4 lg:p-8 ">
-        <div className="mx-auto max-w-6xl mt-24">
+      {/* Show popup if true */}
+      <IdentityVerificationPopup
+        isOpen={showPopup}
+        onClose={() => setShowPopup(false)}
+      />
+      <div className="pt-24">
+        <section className="relative text-center  overflow-hidden shadow-xl">
+          <Swiper
+            modules={[Navigation, Pagination, Autoplay]}
+            navigation
+            pagination={{ clickable: true }}
+            autoplay={{ delay: 3000 }}
+            loop
+            className="w-full h-[500px]"
+          >
+            {images.map((img, index) => (
+              <SwiperSlide key={index}>
+                <div className="relative w-full h-full">
+                  <img
+                    src={img}
+                    alt={`Slide ${index + 1}`}
+                    className="absolute inset-0 w-full h-full object-cover"
+                  />
+                </div>
+              </SwiperSlide>
+            ))}
+          </Swiper>
+        </section>
+        <NotableAlumni />
+      </div>
+      <div className="min-h-screen bg-gray-50 p-4 lg:p-8">
+        <div className="mx-auto max-w-6xl ">
           {/* Main Content */}
           <main className="container mx-auto px-4 py-8">
             {/* Hero Section */}
-            <section className="relative text-center mb-12 overflow-hidden rounded-lg shadow-xl">
-              {/* Background Image */}
-              <div className="relative w-full h-96">
-                <img
-                  src="/download.jpeg"
-                  alt="Alumni background"
-                  className="absolute inset-0 w-full h-full object-cover"
-                />
-                {/* Gradient Overlay */}
-                <div className="relative z-10 py-16 px-6 bg-gradient-to-r from-blue-500/50 to-purple-600/50 text-white h-96">
-                  <h1 className="text-4xl font-bold mb-4">
-                    Welcome Back, Alumni!
-                  </h1>
-                  <p className="text-xl text-blue-100 mb-6">
-                    Stay connected, get involved, and make a difference.
-                  </p>
-                  
-                </div>
-              </div>
-
-              {/* Content Section */}
-            </section>
 
             {/* Upcoming Events */}
             <section className="mb-12">
-              <h2 className="text-2xl font-semibold mb-4">Upcoming Events</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {[
-                  {
-                    title: "Annual Homecoming",
-                    date: "October 15, 2025",
-                    description:
-                      "Join us for a weekend of nostalgia and celebration!",
-                  },
-                  {
-                    title: "Career Networking Night",
-                    date: "November 5, 2025",
-                    description:
-                      "Connect with fellow alumni and expand your professional network.",
-                  },
-                  {
-                    title: "Alumni Volunteer Day",
-                    date: "December 1, 2025",
-                    description:
-                      "Give back to the community and make a positive impact together.",
-                  },
-                ].map((event, index) => (
-                  <Card
-                    key={index}
-                    className="hover:shadow-lg transition-shadow duration-300"
-                  >
-                    <CardHeader>
-                      <CardTitle>{event.title}</CardTitle>
-                      <CardDescription>{event.date}</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <p>{event.description}</p>
-                      <Button variant="outline" className="mt-4">
-                        Learn More
-                      </Button>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </section>
+              <h2 className="text-2xl font-bold text-gray-800 mb-6">
+                Upcoming Events
+              </h2>
 
-            {/* Latest News */}
-            <section className="mb-12">
-              <h2 className="text-2xl font-semibold mb-4">Latest News</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {[
-                  {
-                    title: "New Scholarship Fund Established",
-                    date: "July 1, 2025",
-                    excerpt:
-                      "Thanks to generous alumni donations, we've established a new scholarship fund to support underprivileged students.",
-                  },
-                  {
-                    title: "Alumni Spotlight: Jane Doe's Tech Innovation",
-                    date: "June 15, 2025",
-                    excerpt:
-                      "Alumna Jane Doe ('15) has been recognized for her groundbreaking work in artificial intelligence.",
-                  },
-                ].map((news, index) => (
-                  <Card key={index}>
-                    <CardHeader>
-                      <CardTitle>{news.title}</CardTitle>
-                      <CardDescription>{news.date}</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <p>{news.excerpt}</p>
-                      <Button variant="link" className="mt-2 p-0">
-                        Read More
-                      </Button>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </section>
+              {loading ? (
+                <p className="text-center text-gray-500">Loading events...</p>
+              ) : events.length === 0 ? (
+                <p className="text-center text-gray-500">No events found.</p>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {events.map((event) => (
+                    <Card
+                      key={event.event_id}
+                      className="rounded-md overflow-hidden shadow-md"
+                    >
+                      {/* Image on top */}
+                      <img
+                        src={event.media_url || "/placeholder.svg"}
+                        alt={event.title || "Event"}
+                        className="w-full h-48 object-cover"
+                      />
 
-            {/* Quick Links */}
-            <section>
-              <h2 className="text-2xl font-semibold mb-4">Quick Links</h2>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {[
-                  { title: "Alumni Directory", icon: Users },
-                  { title: "Mentorship Program", icon: GraduationCap },
-                  { title: "Campus News", icon: Newspaper },
-                  { title: "Event Calendar", icon: Calendar },
-                ].map((link, index) => (
-                  <Card key={index} className="text-center">
-                    <CardContent className="pt-6">
-                      <link.icon className="mx-auto mb-2" size={24} />
-                      <h3 className="font-semibold">{link.title}</h3>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+                      {/* Event Content */}
+                      <CardContent className="p-4 flex flex-col justify-between h-full">
+                        <div>
+                          <h3 className="text-lg md:text-xl font-semibold text-gray-900 mb-2">
+                            {event.title}
+                          </h3>
+
+                          <div className="space-y-2 text-sm text-gray-600">
+                            {/* Start & End Date */}
+                            <div className="flex items-center gap-2">
+                              <Calendar className="h-4 w-4 text-blue-600" />
+                              <span>
+                                Starts:{" "}
+                                {new Date(event.start_time).toLocaleDateString(
+                                  "en-GB"
+                                )}
+                                {event.end_time &&
+                                  ` • Ends: ${new Date(
+                                    event.end_time
+                                  ).toLocaleDateString("en-GB")}`}
+                              </span>
+                            </div>
+
+                            {/* Location */}
+                            <div className="flex items-center gap-2">
+                              <MapPin className="h-4 w-4 text-red-500" />
+                              <span>{event.location}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Status & View Button */}
+                        <div className="flex justify-between items-center mt-4">
+                          <span
+                            className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                              new Date(event.end_time) < new Date()
+                                ? "bg-gray-200 text-gray-700"
+                                : "bg-green-100 text-green-700"
+                            }`}
+                          >
+                            {new Date(event.end_time) < new Date()
+                              ? "Past Event"
+                              : "Upcoming Event"}
+                          </span>
+
+                          <Link
+                            to={`/events/${event.title
+                              .toLowerCase()
+                              .replace(/\s+/g, "-")}/${event.event_id}`}
+                          >
+                            <Button className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-md">
+                              VIEW
+                            </Button>
+                          </Link>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
             </section>
+           
           </main>
         </div>
       </div>

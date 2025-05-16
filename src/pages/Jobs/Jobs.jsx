@@ -1,57 +1,71 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Briefcase, Filter } from "lucide-react";
 import { NavLink } from "react-router-dom";
-const jobData = [
-  {
-    id: 1,
-    title: "Graduate Engineer Trainee",
-    company: "Hypotenuse Energy",
-    location: "Ahmedabad",
-    workplace: "On-site",
-    experience: "Fresher",
-    salary: "INR 15,000 - 22,000 / per month",
-    posted: "Posted yesterday",
-    applyBy: "Apply by Apr 15, 2025",
-    type: "Full Time",
-  },
-  {
-    id: 2,
-    title: "Purchase Engineer",
-    company: "System Protection",
-    location: "Vadodara",
-    workplace: "On-site",
-    experience: "Not specified",
-    salary: "INR 25,000 / per year",
-    posted: "Posted 1 month ago",
-    applyBy: "Applications closed",
-    type: "Full Time",
-  },
-  {
-    id: 3,
-    title: "Software Engineer (JAVA)",
-    company: "Blueberry Databases",
-    location: "Vadodara",
-    workplace: "On-site",
-    experience: "Not specified",
-    salary: "INR 400,000 / per year",
-    posted: "Posted 2 weeks ago",
-    applyBy: "Open",
-    type: "Full Time",
-  },
-];
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
 
+import API_URL from '../../config';
 function Jobs() {
   const [search, setSearch] = useState("");
+  const [jobs, setJobs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [jobType, setJobType] = useState("");
+  const [location, setLocation] = useState("");
+  const [locationSearch, setLocationSearch] = useState(""); // New state
+  const token = localStorage.getItem("token");
+
+  // Fetch job data from API
+  useEffect(() => {
+    const fetchJobs = async () => {
+      try {
+        const response = await axios.get(
+          `${API_URL}/api/jobs`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        console.log("RESPONSE:", response);
+        setJobs(response.data.data); // 👈 set the actual job array here
+      } catch (error) {
+        console.error("ERROR RESPONSE:", error.response);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchJobs();
+  }, []);
+
+  const filteredJobs = jobs.filter((job) => {
+    const matchesSearch =
+      job.title.toLowerCase().includes(search.toLowerCase()) ||
+      job.company_name.toLowerCase().includes(search.toLowerCase());
+
+    const matchesJobType = jobType === "" || job.job_type === jobType;
+    const matchesLocation =
+      location === "" ||
+      job.location.toLowerCase().includes(location.toLowerCase());
+
+    return matchesSearch && matchesJobType && matchesLocation;
+  });
 
   return (
     <div className="min-h-screen bg-gray-50 p-6 lg:p-8">
       <div className="mx-auto max-w-6xl grid grid-cols-1 md:grid-cols-4 gap-6">
         {/* Filters Section */}
-        <div className=" p-4 md:col-span-1 mt-24">
+        <div className="p-4 md:col-span-1 mt-24">
           <h3 className="text-lg font-semibold flex items-center mb-4">
             <Filter size={20} className="mr-2" /> Filters
           </h3>
@@ -60,39 +74,52 @@ function Jobs() {
               placeholder="Search by company, title"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full p-2 border rounded"
+              className="w-full"
             />
-            <select className="w-full p-2 border rounded">
-              <option>Opportunity Type</option>
-              <option>Full Time</option>
-              <option>Part Time</option>
-            </select>
-            <select className="w-full p-2 border rounded">
-              <option>Location</option>
-              <option>Ahmedabad</option>
-              <option>Vadodara</option>
-            </select>
-            <select className="w-full p-2 border rounded">
-              <option>Industry</option>
-              <option>IT</option>
-              <option>Engineering</option>
-            </select>
-            <select className="w-full p-2 border rounded">
-              <option>Experience</option>
-              <option>Fresher</option>
-              <option>1-3 Years</option>
-            </select>
+
+            <Select
+              value={jobType}
+              onValueChange={(value) =>
+                setJobType(value === "all" ? "" : value)
+              }
+            >
+              <SelectTrigger className="w-full rounded">
+                <SelectValue placeholder="All Types" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Types</SelectItem>
+                <SelectItem value="Full-Time">Full-Time</SelectItem>
+                <SelectItem value="Part-Time">Part-Time</SelectItem>
+                <SelectItem value="Internship">Internship</SelectItem>
+              </SelectContent>
+            </Select>
+
+          
+                <Input
+                  placeholder="Search by Location"
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  className="w-full"
+                />
+              
           </div>
         </div>
 
         {/* Job Listings Section */}
         <div className="md:col-span-3 mt-24">
-          {/* Header */}
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold">Opportunities</h2>
             <div className="space-x-2">
-              <Button variant="outline">Preferences</Button>
-              <NavLink to="/post-jobs"  className="bg-blue-600 text-white">
+              <NavLink
+                to="/my-application"
+                className="bg-gray-50 px-4 py-2 rounded border font-medium"
+              >
+                My Applications
+              </NavLink>
+              <NavLink
+                to="/post-jobs"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
+              >
                 + Post an Opportunity
               </NavLink>
             </div>
@@ -100,33 +127,46 @@ function Jobs() {
 
           {/* Job Listings */}
           <div className="space-y-4">
-            {jobData.map((job) => (
-              <Card key={job.id} className="p-4 border shadow-sm bg-white">
-                <CardContent>
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="text-lg font-semibold">{job.title}</h3>
-                      <p className="text-gray-600">{job.company}</p>
-                      <div className="flex items-center space-x-2 text-sm text-gray-500 mt-2">
-                        <MapPin size={16} />
-                        <span>
-                          {job.location} ({job.workplace})
-                        </span>
-                        <Briefcase size={16} />
-                        <span>{job.experience}</span>
+            {loading ? (
+              <p>Loading jobs...</p>
+            ) : filteredJobs.length === 0 ? (
+              <p>No jobs found.</p>
+            ) : (
+              filteredJobs.map((job, index) => (
+                <Card key={index} className="p-4 border shadow-sm bg-white">
+                  <CardContent>
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="text-lg font-semibold">{job.title}</h3>
+                        <p className="text-gray-600">{job.company_name}</p>
+                        <div className="flex items-center space-x-2 text-sm text-gray-500 mt-2">
+                          <MapPin size={16} />
+                          <span>{job.location}</span>
+                          <Briefcase size={16} />
+                          <span>{job.job_type}</span>
+                        </div>
+                        <p className="text-sm text-gray-700 mt-1">
+                          {job.income}
+                        </p>
+                        <div className="flex justify-between items-center mt-2">
+                          <Badge variant="outline">
+                            Deadline:{" "}
+                            {new Date(job.deadline).toLocaleDateString("en-GB")}
+                          </Badge>
+                        </div>
                       </div>
-                      <p className="text-sm text-gray-700 mt-1">{job.salary}</p>
-                      <Badge variant="outline" className="mt-2">
-                        {job.posted}
-                      </Badge>
+
+                      <NavLink
+                        to={`/job-application/${job.job_id}`}
+                        className="bg-blue-900 hover:bg-blue-700 text-white px-4 py-1 rounded"
+                      >
+                        View
+                      </NavLink>
                     </div>
-                    <Badge className="self-start bg-gray-200 text-gray-700">
-                      {job.type}
-                    </Badge>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                  </CardContent>
+                </Card>
+              ))
+            )}
           </div>
         </div>
       </div>

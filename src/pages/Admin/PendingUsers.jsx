@@ -33,8 +33,7 @@ import AdminNavbar from "./AdminNavbar";
 import axios from "axios";
 import toast, { Toaster } from "react-hot-toast";
 import API_URL from "../../config";
-
-function AdminAlumni() {
+function PendingUsers() {
   const [searchQuery, setSearchQuery] = useState("");
   const [alumni, setAlumni] = useState([]);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -45,10 +44,6 @@ function AdminAlumni() {
   const [rejectionReason, setRejectionReason] = useState("");
   const [rejectionUserId, setRejectionUserId] = useState(null);
 
-  const [newAlumni, setNewAlumni] = useState({
-    role: "",
-    email: "",
-  });
   const filteredAlumni = alumni.filter((alumnus) =>
     `${alumnus?.name ?? ""} ${alumnus?.email ?? ""} ${alumnus?.role ?? ""}`
       .toLowerCase()
@@ -76,8 +71,12 @@ function AdminAlumni() {
         const response = await axios.get(`${API_URL}/api/users`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        console.log(response.data.data);
-        setAlumni(response.data.data || []);
+
+        const pendingAlumni = (response.data.data || []).filter(
+          (alumnus) => alumnus.status === "Pending"
+        );
+
+        setAlumni(pendingAlumni);
       } catch (error) {
         console.error("Error fetching alumni:", error);
         toast.error("Failed to load alumni!");
@@ -86,41 +85,6 @@ function AdminAlumni() {
 
     fetchAlumni();
   }, [token]);
-
-  // Handle input change
-  const handleChange = (e) => {
-    setNewAlumni({ ...newAlumni, [e.target.name]: e.target.value });
-  };
-
-  // Add new alumni
-  const handleAddAlumni = async () => {
-    if (!newAlumni.name || !newAlumni.email) {
-      toast.error("All fields are required!");
-      return;
-    }
-
-    try {
-      const response = await axios.post(
-        `${API_URL}/api/users/profile`,
-        newAlumni,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      if (response.data?.success) {
-        setAlumni((prev) => [...prev, response.data.data]);
-        toast.success("Alumni added successfully!");
-        setIsAddDialogOpen(false);
-        setNewAlumni({ name: "", email: "" });
-      } else {
-        throw new Error("Invalid response format");
-      }
-    } catch (error) {
-      console.error("Error adding alumni:", error);
-      toast.error("Failed to add alumni!");
-    }
-  };
 
   // Delete alumni
   const handleDeleteAlumni = async (id) => {
@@ -137,7 +101,7 @@ function AdminAlumni() {
     }
   };
 
-  const updateStatus = async (user_id, status, status_message = "") => {
+ const updateStatus = async (user_id, status, status_message = "") => {
   try {
     const response = await axios.post(
       `${API_URL}/api/users/status`,
@@ -202,7 +166,7 @@ function AdminAlumni() {
       <AdminNavbar />
       <div className="flex flex-col items-center w-full p-6 flex-1 overflow-auto">
         <div className="flex justify-between items-center mb-6 w-full">
-          <h1 className="text-2xl font-bold">Alumni Management</h1>
+          <h1 className="text-2xl font-bold">Pending Authentication</h1>
           <div className=" max-w-md relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
             <Input
@@ -212,7 +176,6 @@ function AdminAlumni() {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-         
         </div>
         <div className="w-full px-12 ">
           <div className="rounded-xl border border-gray-200 bg-gradient-to-br from-gray-50 to-white shadow-lg overflow-hidden">
@@ -238,7 +201,7 @@ function AdminAlumni() {
                 {currentAlumni.length > 0 ? (
                   currentAlumni.map((alumnus, index) => (
                     <TableRow
-                      key={alumnus.id}
+                      key={alumnus.user_id}
                       className={
                         index % 2 === 0
                           ? "bg-white hover:bg-blue-50 transition-all duration-300"
@@ -341,6 +304,7 @@ function AdminAlumni() {
               </TableBody>
             </Table>
           </div>
+
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogContent className="max-w-md">
               <DialogHeader>
@@ -381,53 +345,43 @@ function AdminAlumni() {
               )}
             </DialogContent>
           </Dialog>
-          <Dialog
-            open={isRejectDialogOpen}
-            onOpenChange={setIsRejectDialogOpen}
-          >
-            <DialogContent className="max-w-sm">
-              <DialogHeader>
-                <DialogTitle>Reject Alumni</DialogTitle>
-                <DialogDescription>
-                  Please provide a reason for rejecting this alumni request.
-                </DialogDescription>
-              </DialogHeader>
+<Dialog open={isRejectDialogOpen} onOpenChange={setIsRejectDialogOpen}>
+  <DialogContent className="max-w-sm">
+    <DialogHeader>
+      <DialogTitle>Reject Alumni</DialogTitle>
+      <DialogDescription>
+        Please provide a reason for rejecting this alumni request.
+      </DialogDescription>
+    </DialogHeader>
 
-              <div className="space-y-4">
-                <Input
-                  placeholder="Enter reason for rejection"
-                  value={rejectionReason}
-                  onChange={(e) => setRejectionReason(e.target.value)}
-                />
-              </div>
+    <div className="space-y-4">
+      <Input
+        placeholder="Enter reason for rejection"
+        value={rejectionReason}
+        onChange={(e) => setRejectionReason(e.target.value)}
+      />
+    </div>
 
-              <div className="flex justify-end gap-2 mt-4">
-                <Button
-                  variant="outline"
-                  onClick={() => setIsRejectDialogOpen(false)}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  disabled={!rejectionReason.trim()}
-                  onClick={() => {
-                    if (rejectionUserId) {
-                      updateStatus(
-                        rejectionUserId,
-                        "Rejected",
-                        rejectionReason
-                      );
-                    }
-                    setIsRejectDialogOpen(false);
-                    setRejectionReason("");
-                    setRejectionUserId(null);
-                  }}
-                >
-                  Reject
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
+    <div className="flex justify-end gap-2 mt-4">
+      <Button variant="outline" onClick={() => setIsRejectDialogOpen(false)}>
+        Cancel
+      </Button>
+      <Button
+        disabled={!rejectionReason.trim()}
+        onClick={() => {
+          if (rejectionUserId) {
+            updateStatus(rejectionUserId, "Rejected", rejectionReason);
+          }
+          setIsRejectDialogOpen(false);
+          setRejectionReason("");
+          setRejectionUserId(null);
+        }}
+      >
+        Reject
+      </Button>
+    </div>
+  </DialogContent>
+</Dialog>
 
           {/* Pagination */}
           <div className="flex justify-center items-center mt-6 space-x-2">
@@ -471,4 +425,4 @@ function AdminAlumni() {
   );
 }
 
-export default AdminAlumni;
+export default PendingUsers;

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Search, Mail, MessageCircle } from "lucide-react";
 import { Link, NavLink } from "react-router-dom";
+import API_URL from '../config';
 
 const AlumniNetwork = () => {
   const [alumni, setAlumni] = useState([]);
@@ -17,7 +18,7 @@ const AlumniNetwork = () => {
     const fetchAlumni = async () => {
       try {
         const response = await axios.get(
-          "https://alumni-backend-drab.vercel.app/api/users/profile/all",
+          `${API_URL}/api/users/profile/all`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -51,7 +52,13 @@ const AlumniNetwork = () => {
     setFilteredAlumni(filtered);
   }, [searchQuery, selectedBranch, alumni]);
 
-  const branches = ["Computer Engineering", "Mechanical Engineering", "Civil Engineering", "Electrical Engineering", "Information Technology"];
+  const branches = [
+    "Computer",
+    "Mechanical",
+    "Civil",
+    "Electrical",
+    "Information Technology",
+  ];
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 lg:p-8">
@@ -96,9 +103,13 @@ const AlumniNetwork = () => {
               >
                 {/* Portrait-style image */}
                 <img
-                  src={alum.photo}
+                  src={alum.photo || "/profile.jpg"}
                   alt={alum.name}
-                  className="w-full h-48 object-cover"
+                  className="w-full h-64 object-cover"
+                  onError={(e) => {
+                    e.target.onerror = null; // prevent infinite loop
+                    e.target.src = "/profile.jpg";
+                  }}
                 />
 
                 <CardContent className="p-4 text-center relative">

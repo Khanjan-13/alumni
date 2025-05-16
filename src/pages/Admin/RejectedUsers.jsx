@@ -33,11 +33,9 @@ import AdminNavbar from "./AdminNavbar";
 import axios from "axios";
 import toast, { Toaster } from "react-hot-toast";
 import API_URL from "../../config";
-
-function AdminAlumni() {
+function RejectedUsers() {
   const [searchQuery, setSearchQuery] = useState("");
   const [alumni, setAlumni] = useState([]);
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedAlumni, setSelectedAlumni] = useState(null);
   const [loadingView, setLoadingView] = useState(false);
@@ -45,10 +43,6 @@ function AdminAlumni() {
   const [rejectionReason, setRejectionReason] = useState("");
   const [rejectionUserId, setRejectionUserId] = useState(null);
 
-  const [newAlumni, setNewAlumni] = useState({
-    role: "",
-    email: "",
-  });
   const filteredAlumni = alumni.filter((alumnus) =>
     `${alumnus?.name ?? ""} ${alumnus?.email ?? ""} ${alumnus?.role ?? ""}`
       .toLowerCase()
@@ -76,8 +70,13 @@ function AdminAlumni() {
         const response = await axios.get(`${API_URL}/api/users`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        console.log(response.data.data);
-        setAlumni(response.data.data || []);
+
+        const rejectedAlumni = (response.data.data || []).filter(
+          (alumnus) => alumnus.status === "Rejected"
+        );
+
+        console.log(rejectedAlumni)
+        setAlumni(rejectedAlumni);
       } catch (error) {
         console.error("Error fetching alumni:", error);
         toast.error("Failed to load alumni!");
@@ -86,41 +85,6 @@ function AdminAlumni() {
 
     fetchAlumni();
   }, [token]);
-
-  // Handle input change
-  const handleChange = (e) => {
-    setNewAlumni({ ...newAlumni, [e.target.name]: e.target.value });
-  };
-
-  // Add new alumni
-  const handleAddAlumni = async () => {
-    if (!newAlumni.name || !newAlumni.email) {
-      toast.error("All fields are required!");
-      return;
-    }
-
-    try {
-      const response = await axios.post(
-        `${API_URL}/api/users/profile`,
-        newAlumni,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      if (response.data?.success) {
-        setAlumni((prev) => [...prev, response.data.data]);
-        toast.success("Alumni added successfully!");
-        setIsAddDialogOpen(false);
-        setNewAlumni({ name: "", email: "" });
-      } else {
-        throw new Error("Invalid response format");
-      }
-    } catch (error) {
-      console.error("Error adding alumni:", error);
-      toast.error("Failed to add alumni!");
-    }
-  };
 
   // Delete alumni
   const handleDeleteAlumni = async (id) => {
@@ -138,35 +102,37 @@ function AdminAlumni() {
   };
 
   const updateStatus = async (user_id, status, status_message = "") => {
-  try {
-    const response = await axios.post(
-      `${API_URL}/api/users/status`,
-      {
-        user_id,
-        status,
-        status_message, // Add this only if your backend accepts it
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
+    try {
+      const response = await axios.post(
+        `${API_URL}/api/users/status`,
+        {
+          user_id,
+          status,
+          status_message, // Add this only if your backend accepts it
         },
-      }
-    );
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
-    toast.success(
-      `User ${status === "Approved" ? "approved" : "rejected"} successfully!`
-    );
+      toast.success(
+        `User ${status === "Approved" ? "approved" : "rejected"} successfully!`
+      );
 
-    setAlumni((prevAlumni) =>
-      prevAlumni.map((alumnus) =>
-        alumnus.user_id === user_id ? { ...alumnus, status } : alumnus
-      )
-    );
-  } catch (err) {
-    console.error("Failed to update status:", err.response?.data || err.message);
-  }
-};
-
+      setAlumni((prevAlumni) =>
+        prevAlumni.map((alumnus) =>
+          alumnus.user_id === user_id ? { ...alumnus, status } : alumnus
+        )
+      );
+    } catch (err) {
+      console.error(
+        "Failed to update status:",
+        err.response?.data || err.message
+      );
+    }
+  };
 
   const handleApprove = (user_id) => {
     updateStatus(user_id, "Approved");
@@ -202,7 +168,7 @@ function AdminAlumni() {
       <AdminNavbar />
       <div className="flex flex-col items-center w-full p-6 flex-1 overflow-auto">
         <div className="flex justify-between items-center mb-6 w-full">
-          <h1 className="text-2xl font-bold">Alumni Management</h1>
+          <h1 className="text-2xl font-bold">Rejected Users</h1>
           <div className=" max-w-md relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
             <Input
@@ -212,7 +178,6 @@ function AdminAlumni() {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-         
         </div>
         <div className="w-full px-12 ">
           <div className="rounded-xl border border-gray-200 bg-gradient-to-br from-gray-50 to-white shadow-lg overflow-hidden">
@@ -228,6 +193,9 @@ function AdminAlumni() {
                   <TableHead className="text-white font-semibold text-[13px] px-6 py-4 text-center uppercase tracking-wide">
                     Actions
                   </TableHead>
+                  <TableHead className="text-white font-semibold text-[13px] px-6 py-4 uppercase tracking-wide">
+                    Reason
+                  </TableHead>
                   <TableHead className="text-white font-semibold text-[13px] px-6 py-4 text-center uppercase tracking-wide">
                     Status
                   </TableHead>
@@ -238,7 +206,7 @@ function AdminAlumni() {
                 {currentAlumni.length > 0 ? (
                   currentAlumni.map((alumnus, index) => (
                     <TableRow
-                      key={alumnus.id}
+                      key={alumnus.user_id}
                       className={
                         index % 2 === 0
                           ? "bg-white hover:bg-blue-50 transition-all duration-300"
@@ -264,7 +232,9 @@ function AdminAlumni() {
                           {alumnus.status}
                         </span>
                       </TableCell>
-
+                      <TableCell className="px-6 py-4 text-sm text-gray-700">
+                        {alumnus.status_message}
+                      </TableCell>
                       <TableCell className="px-6 py-4 text-center">
                         <div className="flex justify-center space-x-3">
                           <Button
@@ -341,6 +311,7 @@ function AdminAlumni() {
               </TableBody>
             </Table>
           </div>
+
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogContent className="max-w-md">
               <DialogHeader>
@@ -471,4 +442,4 @@ function AdminAlumni() {
   );
 }
 
-export default AdminAlumni;
+export default RejectedUsers;

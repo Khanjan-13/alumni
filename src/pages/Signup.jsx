@@ -10,6 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import bvm from "@/assets/bvm.jpg";
+import API_URL from '../config';
 
 function Signup() {
   const [formData, setFormData] = useState({
@@ -73,7 +74,7 @@ function Signup() {
 
     try {
       const response = await axios.post(
-        "https://alumni-backend-drab.vercel.app/api/users/register",
+        `${API_URL}/api/users/register`,
         {
           email: formData.email,
           password: formData.password,
@@ -102,51 +103,61 @@ function Signup() {
   };
 
   return (
-    <div
-    className="min-h-screen flex items-center justify-center bg-cover bg-center relative"
-    style={{
-      backgroundImage: `url(${bvm})`,
-    }}
-  >
-    {/* Overlay */}
-    <div className="absolute inset-0 bg-blue-900 opacity-50 z-0" />
+ <div className="grid min-h-screen lg:grid-cols-2 bg-white text-gray-900">
+  <Toaster position="top-center" reverseOrder={false} />
 
-    {/* Toast Notifications */}
-    <Toaster position="top-right" reverseOrder={false} />
+  {/* Left Form Section */}
+   <div className="relative hidden lg:block">
+    <img
+      src={bvm}
+      alt="Sign up visual"
+      className="absolute inset-0 h-full w-full object-cover"
+    />
+  </div>
 
-    {/* Sign Up Card */}
-    <div className="relative z-10 bg-white/20 backdrop-blur-lg shadow-xl w-full max-w-md p-8 rounded-xl border border-white/30">
-      <h2 className="text-3xl font-bold text-white text-center mb-6">
-        Create an Account
+   {/* Right Side Image */}
+  <div className="flex flex-col justify-center px-6 py-12 lg:px-20">
+  
+
+    {/* Form Container */}
+    <div className="w-full max-w-md mx-auto">
+        {/* Branding */}
+    <div className="flex items-center justify-center gap-2 lg:justify-start mb-10">
+      <span className="text-xl font-semibold tracking-wide mx-auto">
+        BVM Alumni Association
+      </span>
+    </div>
+      <h2 className="text-2xl font-bold mb-6 text-center lg:text-left">
+        Create your account
       </h2>
 
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} className="space-y-5">
         {/* Email */}
-        <div className="mb-4">
-          <label htmlFor="email" className="block text-sm font-medium text-white mb-1">
+        <div>
+          <label htmlFor="email" className="block text-sm font-medium mb-1">
             Email Address
           </label>
           <Input
             type="email"
             id="email"
             name="email"
-            placeholder="Enter your email"
+            placeholder="you@example.com"
             value={formData.email}
             onChange={handleChange}
-            className="w-full px-4 py-2 border border-white/40 text-white bg-white/10 rounded-lg placeholder-white/70 focus:ring-2 focus:ring-blue-400 focus:outline-none"
+            className="w-full px-4 py-2 border border-gray-300 bg-white text-gray-900 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
             required
           />
         </div>
 
         {/* Role */}
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-white mb-1">Role</label>
+        <div>
+          <label className="block text-sm font-medium mb-1">Role</label>
           <Select
             onValueChange={handleRoleChange}
             value={formData.userType}
             disabled={formData.isStudentEmail || formData.isFacultyEmail}
           >
-            <SelectTrigger className="bg-white/10 text-white border-white/30">
+            <SelectTrigger className="bg-white text-gray-900 border border-gray-300">
               <SelectValue placeholder={formData.userType || "Select Role"} />
             </SelectTrigger>
             <SelectContent>
@@ -163,35 +174,38 @@ function Signup() {
         </div>
 
         {/* Password */}
-        <div className="mb-4">
-          <label htmlFor="password" className="block text-sm font-medium text-white mb-1">
+        <div>
+          <label htmlFor="password" className="block text-sm font-medium mb-1">
             Password
           </label>
           <Input
             type="password"
             id="password"
             name="password"
-            placeholder="Create a password"
+            placeholder="••••••••"
             value={formData.password}
             onChange={handleChange}
-            className="w-full px-4 py-2 border border-white/40 text-white bg-white/10 rounded-lg placeholder-white/70 focus:ring-2 focus:ring-blue-400 focus:outline-none"
+            className="w-full px-4 py-2 border border-gray-300 bg-white text-gray-900 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
             required
           />
         </div>
 
         {/* Confirm Password */}
-        <div className="mb-6">
-          <label htmlFor="confirmPassword" className="block text-sm font-medium text-white mb-1">
+        <div>
+          <label
+            htmlFor="confirmPassword"
+            className="block text-sm font-medium mb-1"
+          >
             Confirm Password
           </label>
           <Input
             type="password"
             id="confirmPassword"
             name="confirmPassword"
-            placeholder="Confirm your password"
+            placeholder="••••••••"
             value={formData.confirmPassword}
             onChange={handleChange}
-            className="bg-white/10 text-white placeholder-white/70 border-white/30"
+            className="w-full px-4 py-2 border border-gray-300 bg-white text-gray-900 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
             required
           />
         </div>
@@ -199,23 +213,27 @@ function Signup() {
         {/* Submit */}
         <button
           type="submit"
-          className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm rounded-lg shadow focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow transition-all duration-200"
         >
           Sign Up
         </button>
       </form>
 
-      <p className="mt-6 text-center text-sm text-white">
+      {/* Login Link */}
+      <p className="mt-6 text-center text-sm text-gray-600">
         Already have an account?{" "}
-        <a
-          href="/login"
-          className="text-blue-300 hover:underline hover:text-blue-200"
-        >
+        <a href="/login" className="text-blue-600 hover:text-blue-500 underline">
           Log In
         </a>
       </p>
     </div>
   </div>
+
+ 
+ 
+</div>
+
+
   );
 }
 

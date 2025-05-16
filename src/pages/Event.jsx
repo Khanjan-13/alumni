@@ -5,11 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Search, MapPin, Calendar, CalendarDays } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
+import API_URL from "../config";
 function Event() {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const navigate = useNavigate();
 
   const token = localStorage.getItem("token");
   const user_id = localStorage.getItem("user_id");
@@ -24,14 +27,11 @@ function Event() {
 
   const checkUserVerification = async (email) => {
     try {
-      const response = await axios.get(
-        `https://alumni-backend-drab.vercel.app/api/users/${email}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`, // make sure token is available
-          },
-        }
-      );
+      const response = await axios.get(`${API_URL}/api/users/${email}`, {
+        headers: {
+          Authorization: `Bearer ${token}`, // make sure token is available
+        },
+      });
 
       const user = response.data;
       console.log(user);
@@ -49,12 +49,9 @@ function Event() {
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        const response = await axios.get(
-          "https://alumni-backend-drab.vercel.app/api/users/events/all",
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
+        const response = await axios.get(`${API_URL}/api/users/events/all`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         setEvents(response.data.data); // Assuming API response contains { data: [...] }
       } catch (error) {
         console.error("Error fetching events:", error);
@@ -76,12 +73,15 @@ function Event() {
       <div className="mx-auto max-w-6xl">
         <div className="grid grid-cols-1 gap-6 md:grid-cols-4 mt-24">
           {/* Sidebar */}
-          <div className="space-y-6 md:col-span-1">
-            <Button className="bg-blue-900 hover:bg-blue-700">
+          <div className="space-y-6 md:col-span-1 ">
+            {/* <Button
+              className="bg-blue-900 hover:bg-blue-700 fixed"
+              onClick={() => navigate("/my-events")}
+            >
               {" "}
               <CalendarDays className="h-4 w-4" />
               My Events
-            </Button>
+            </Button> */}
             <div className=" max-w-md mx-auto fixed">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
               <Input

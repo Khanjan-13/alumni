@@ -1,10 +1,19 @@
 import { useState, useEffect } from "react";
-import { Users, BarChart2, Mail, UploadCloud } from "lucide-react";
+import {
+  Users,
+  BarChart2,
+  Mail,
+  UploadCloud,
+  AlertCircle,
+  Briefcase,
+  Hourglass,
+} from "lucide-react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
 import AdminNavbar from "./AdminNavbar";
 import NewUsers from "@/components/webComponents/AdminHome/NewUsers";
+import API_URL from "../../config";
 
 export default function Dashboard() {
   const [counts, setCounts] = useState(null);
@@ -21,14 +30,11 @@ export default function Dashboard() {
       }
 
       try {
-        const res = await axios.get(
-          "https://alumni-backend-drab.vercel.app/api/admin/dashboard",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        const res = await axios.get(`${API_URL}/api/admin/dashboard`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
         console.log(res);
         setCounts(res.data.data.counts);
       } catch (error) {
@@ -51,21 +57,18 @@ export default function Dashboard() {
         {
           count: counts.total_profiles,
           label: "Total Profiles",
-          action: "Check",
         },
         {
           count: counts.users_last_month,
           label: "New Users Last Month",
-          action: "Review",
         },
         {
           count: counts.profiles_updated_last_month,
           label: "Profiles Updated Last Month",
-          action: "Inspect",
         },
         {
-          count: counts.memberships_last_month,
-          label: "New Memberships Last Month",
+          count: counts.total_jobs,
+          label: "New Jobs Last Month",
           action: "Manage",
         },
       ]
@@ -76,17 +79,9 @@ export default function Dashboard() {
       case "View":
         navigate("/admin/alumni");
         break;
-      case "Check":
-        navigate("/admin/profiles");
-        break;
-      case "Review":
-        navigate("/admin/new-users");
-        break;
-      case "Inspect":
-        navigate("/admin/updated-profiles");
-        break;
+
       case "Manage":
-        navigate("/admin/memberships");
+        navigate("/admin/jobs");
         break;
       default:
         break;
@@ -126,12 +121,14 @@ export default function Dashboard() {
                     {count}
                   </div>
                   <p className="text-sm text-gray-700 mb-4">{label}</p>
-                  <button
-                    onClick={() => handleActionClick(action)}
-                    className="px-4 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white rounded shadow"
-                  >
-                    {action}
-                  </button>
+                  {action && (
+                    <button
+                      onClick={() => handleActionClick(action)}
+                      className="px-4 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white rounded shadow"
+                    >
+                      {action}
+                    </button>
+                  )}
                 </div>
               );
             })}
@@ -139,32 +136,10 @@ export default function Dashboard() {
         </section>
 
         <section>
-          <h2 className="text-xl font-semibold mb-4">Pending for Authentication </h2>
-          <NewUsers />
-        </section>
-        {/* Analytics */}
-        <section>
           <h2 className="text-xl font-semibold mb-4">
-            Top analytics of this month
+            Pending for Authentication{" "}
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {[
-              { title: "Profile Records", value: 32889 },
-              { title: "New Profiles", value: 25 },
-              { title: "Mails Sent", value: 1901 },
-              { title: "Profiles Updated", value: 105 },
-              { title: "Visitors", value: 464 },
-              { title: "Time Spent", value: "107.99h" },
-            ].map(({ title, value }, i) => (
-              <div
-                key={i}
-                className="bg-white shadow-md p-4 rounded-md text-center"
-              >
-                <h3 className="text-xl font-bold text-blue-800">{value}</h3>
-                <p className="text-gray-600">{title}</p>
-              </div>
-            ))}
-          </div>
+          <NewUsers />
         </section>
 
         {/* Fast Access */}
@@ -172,14 +147,27 @@ export default function Dashboard() {
           <h2 className="text-xl font-semibold mb-4">Fast Access</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
-              { icon: <Users />, label: "View Directory" },
-              { icon: <BarChart2 />, label: "Start a Campaign" },
-              { icon: <Mail />, label: "Send Mail" },
-              { icon: <UploadCloud />, label: "Upload Photos" },
-            ].map(({ icon, label }, i) => (
+              { icon: <Users />, label: "Manage Users", path: "/admin/alumni" },
+              {
+                icon: <AlertCircle />,
+                label: "Pending Users",
+                path: "/admin/pending-alumni",
+              },
+              {
+                icon: <Briefcase />,
+                label: "Manage Jobs",
+                path: "/admin/jobs",
+              },
+              {
+                icon: <Hourglass />,
+                label: "Pending Jobs",
+                path: "/admin/rejected-jobs",
+              },
+            ].map(({ icon, label, path }, i) => (
               <div
                 key={i}
-                className="bg-white shadow-md p-4 rounded-md flex flex-col items-center hover:bg-blue-50 transition"
+                onClick={() => navigate(path)}
+                className="cursor-pointer bg-white shadow-md p-4 rounded-md flex flex-col items-center hover:bg-blue-50 transition"
               >
                 <div className="text-blue-700 mb-2">{icon}</div>
                 <p className="text-sm text-center text-gray-700">{label}</p>

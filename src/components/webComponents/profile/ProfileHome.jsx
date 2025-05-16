@@ -2,11 +2,24 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Pencil, PlusCircle } from "lucide-react";
+import { Pencil, PlusCircle, Download } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { NavLink } from "react-router-dom";
+import API_URL from "../../../config";
+import html2canvas from "html2canvas";
+import { useNavigate } from "react-router-dom";
 
 const ProfileHome = () => {
+  const handleDownload = () => {
+    const card = document.getElementById("membership-id-card");
+    html2canvas(card, { useCORS: true }).then((canvas) => {
+      const link = document.createElement("a");
+      link.download = `${profile.name}_ID_Card.png`;
+      link.href = canvas.toDataURL();
+      link.click();
+    });
+  };
+  const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -16,7 +29,7 @@ const ProfileHome = () => {
     const fetchProfileData = async () => {
       try {
         const response = await axios.get(
-          `https://alumni-backend-drab.vercel.app/api/users/profile/${userId}`,
+          `${API_URL}/api/users/profile/${userId}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -72,7 +85,8 @@ const ProfileHome = () => {
               </div>
               <Button
                 size="icon"
-                className="absolute bottom-2 right-2 bg-white shadow-md p-2 rounded-full hover:bg-gray-100 transition"
+                className="absolute bottom-2 right-2 bg-white shadow-md p-2 rounded-full hover:bg-gray-100 transition" 
+                      onClick={() => navigate("/settings")}
               >
                 <Pencil size={18} className="text-gray-700" />
               </Button>
@@ -98,12 +112,12 @@ const ProfileHome = () => {
               <p className="text-blue-400">{profile.bio}</p>
 
               {/* Alumni Card Button */}
-              <Button
+              {/* <Button
                 variant="outline"
                 className="mt-4 text-blue-600 border-blue-600 hover:bg-blue-50 transition"
               >
                 + Request Alumni Card
-              </Button>
+              </Button> */}
             </div>
           </Card>
 
@@ -173,7 +187,7 @@ const ProfileHome = () => {
                   {profile.admission_year} - {profile.graduation_year}
                 </p>
               </div>
-              <hr/>
+              <hr />
 
               {Array.isArray(profile?.education) &&
                 profile.education.length > 0 && (
@@ -189,7 +203,7 @@ const ProfileHome = () => {
                         <p className="text-xs text-gray-500">
                           {edu.admission_year} - {edu.graduation_year}
                         </p>
-                        <hr className="mt-4"/>
+                        <hr className="mt-4" />
                       </div>
                     ))}
                   </div>
@@ -245,12 +259,65 @@ const ProfileHome = () => {
             </CardContent>
           </Card>
 
-          {/* Membership */}
-          <Card className="mt-4 p-4 rounded-sm">
-            <h3 className="font-semibold">Membership</h3>
-            <CardContent>
-              <p className="text-blue-500">{profile.membership || "N/A"}</p>
-            </CardContent>
+          {/* Card */}
+          <Card className="mt-6 p-6 rounded-md shadow-lg">
+            <div
+              id="membership-id-card"
+              className="relative w-full max-w-md mx-auto p-6 border border-blue-200 rounded-md bg-white shadow-lg"
+              style={{
+                backgroundImage: "url('/bvm.jpg')", // BVM image from the public folder
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+              }}
+            >
+              {/* Overlay to make the background lighter and allow content to pop */}
+              <div className="absolute inset-0 bg-white opacity-80 rounded-md"></div>
+
+              {/* Card Content */}
+              <div className="relative z-10 flex flex-col items-center gap-3">
+                <img
+                  src={profile.photo || "/profile.jpg"}
+                  alt="Profile"
+                  className="w-24 h-24 rounded-full object-cover border-4 border-blue-200"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = "/profile.jpg";
+                  }}
+                />
+                <h2 className="text-xl font-bold text-gray-900">
+                  {profile.name}
+                </h2>
+                <p className="text-gray-600 font-bold">
+                  {profile.degree || "Department"}
+                </p>
+                <p className="text-gray-600 font-bold">
+                  {profile.branch || "Branch"}
+                </p>
+                <p className="text-gray-600 font-bold">
+                  {profile.graduation_year || "Year"}
+                </p>
+                {/* Alumni ID Field */}
+                <div className="mt-2 text-[10px] text-gray-700">
+                  Alumni ID: {profile.user_id}
+                </div>
+                {profile.membership && (
+                  <span className="mt-2 text-sm font-medium text-blue-700 bg-blue-100 px-3 py-1 rounded-full">
+                    {profile.membership}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Download Button */}
+            <div className="flex justify-end mt-4">
+              <Button
+                onClick={handleDownload}
+                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                <Download size={16} />
+                Download ID
+              </Button>
+            </div>
           </Card>
 
           <Card className="mt-4 p-4 rounded-sm">
