@@ -88,7 +88,7 @@ function Navbar() {
             <div className="flex items-center space-x-2">
               <GraduationCap size={32} />
               <NavLink to="/" className="text-2xl font-bold">
-                BVM Alumni Association
+                Alumni Connect
               </NavLink>
             </div>
             <nav>
